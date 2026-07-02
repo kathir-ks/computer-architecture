@@ -22,6 +22,8 @@ export interface SceneVerbs {
   drawer(action: 'put' | 'take', register: 'r1' | 'r2'): Timeline;
   /** Program-counter ticket dispenser pops the next ticket. */
   dispenseTicket(): Timeline;
+  /** Instruction card pops into view on the desk (fetch arrival). */
+  showCard(): Timeline;
   /** Instruction card splits into opcode + operand halves (decode). */
   splitCard(): Timeline;
 

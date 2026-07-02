@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPU Building — a 3D story of how your processor works</title>
+    <meta
+      name="description"
+      content="Learn the fetch–decode–execute cycle and the memory hierarchy by exploring a 10-story building where data travels by lift and latency is felt as travel time."
+    />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>" />
+  </head>
+  <body>
+    <div id="app">
+      <main id="viewport">
+        <div id="canvas-host"></div>
+        <div id="labels-host"></div>
+        <div id="settings-chip" hidden></div>
+      </main>
+      <aside id="panel" aria-label="Story narration">
+        <header id="panel-header">
+          <h1>CPU Building</h1>
+          <nav id="chapter-progress" aria-label="Chapter progress"></nav>
+        </header>
+        <section id="narration" aria-live="polite"></section>
+        <div id="timing-bar" hidden></div>
+        <footer id="panel-controls">
+          <button id="btn-pause" aria-label="Pause or resume animation" hidden>⏸</button>
+          <button id="btn-next">Next ▶</button>
+        </footer>
+      </aside>
+    </div>
+    <div id="loading">
+      <p>Powering up the building…</p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
