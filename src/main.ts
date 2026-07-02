@@ -3,6 +3,8 @@ import { Scene } from './scene';
 import { StoryEngine } from './story/StoryEngine';
 import { CHAPTERS } from './story/chapters';
 import { NarrationPanel, defaultPanelRefs } from './ui/NarrationPanel';
+import { Highlighter } from './sync/Highlighter';
+import { ALL_HIGHLIGHT_IDS, type HighlightId } from './scene/locations';
 
 function webglAvailable(): boolean {
   try {
@@ -124,8 +126,24 @@ function wireStory(scene: Scene): void {
     else engine.pause();
   });
 
-  // Basic term↔scene glow (deepened in Phase 4 with the Highlighter registry).
-  panel.onTermHover((id, on) => scene.setGlow(id as never, on));
+  // Two-way term↔world sync through the Highlighter registry (US2).
+  const highlighter = new Highlighter(
+    {
+      glow3D: (id, on) => scene.setGlow(id as HighlightId, on),
+      focusText: (id) => panel.focusText(id),
+      glowText: (id, on) => panel.setTermGlow(id, on),
+    },
+    import.meta.env.DEV,
+  );
+  highlighter.registerAll(ALL_HIGHLIGHT_IDS);
+
+  panel.onTermHover((id, on) => highlighter.glow(id, on));
+  panel.onTermClick((id) => highlighter.glow(id, true));
+  scene.onElementClick((id) => {
+    highlighter.focusText(id);
+    highlighter.glow(id, true);
+    setTimeout(() => highlighter.glow(id, false), 1200);
+  });
 
   engine.onFreeplayUnlock(() => {
     // FreePlayPanel arrives in Phase 5; until then, celebrate quietly.

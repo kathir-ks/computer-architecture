@@ -58,10 +58,10 @@
 
 **Independent test**: Hover each highlighted term → correct element glows; click each labeled element → panel scrolls to its explanation.
 
-- [ ] T025 [US2] Implement `src/sync/Highlighter.ts` registry (`register3D`, `registerSpan`, `glow`, `focusText`; unknown-id dev-throw/prod-warn) per data-model.md
-- [ ] T026 [P] [US2] Unit test: registry operations + unknown-id behavior in `tests/unit/highlighter.test.ts`
-- [ ] T027 [US2] Render marker spans as interactive highlights in `src/ui/NarrationPanel.ts` (hover → `glow`, focus style) and register all scene objects/labels with `Highlighter` in `src/scene/index.ts`; scene click/label-click → `focusText` scroll-and-flash
-- [ ] T028 [US2] Manual validation: cross-cutting hover/click checks from quickstart on all chapters; ensure glow works with bloom disabled
+- [X] T025 [US2] Implement `src/sync/Highlighter.ts` registry (`register3D`, `registerSpan`, `glow`, `focusText`; unknown-id dev-throw/prod-warn) per data-model.md
+- [X] T026 [P] [US2] Unit test: registry operations + unknown-id behavior in `tests/unit/highlighter.test.ts`
+- [X] T027 [US2] Render marker spans as interactive highlights in `src/ui/NarrationPanel.ts` (hover → `glow`, focus style) and register all scene objects/labels with `Highlighter` in `src/scene/index.ts`; scene click/label-click → `focusText` scroll-and-flash
+- [X] T028 [US2] Manual validation: cross-cutting hover/click checks from quickstart on all chapters; ensure glow works with bloom disabled
 
 **Checkpoint**: Words and world linked both directions on the deployed site.
 
