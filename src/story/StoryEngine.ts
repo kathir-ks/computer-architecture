@@ -38,6 +38,7 @@ export class StoryEngine {
   private stepCbs = new Set<(e: StepEvent) => void>();
   private statusCbs = new Set<(s: StoryStatus) => void>();
   private freeplayCbs = new Set<() => void>();
+  private jumpCbs = new Set<() => void>();
   private lastWrittenHash = '';
 
   constructor(
@@ -76,6 +77,11 @@ export class StoryEngine {
 
   onFreeplayUnlock(cb: () => void): void {
     this.freeplayCbs.add(cb);
+  }
+
+  /** Fired after a chapter jump (hash navigation) — UI should reset and restart. */
+  onJump(cb: () => void): void {
+    this.jumpCbs.add(cb);
   }
 
   // ---- controls ----
@@ -159,6 +165,7 @@ export class StoryEngine {
     this.mode = 'story';
     this.setStatus('waiting');
     this.writeHash();
+    for (const cb of this.jumpCbs) cb();
   }
 
   private writeHash(): void {

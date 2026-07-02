@@ -166,10 +166,12 @@ describe('StoryEngine', () => {
     expect(seen).toEqual([0]);
   });
 
-  it('hashchange jumps chapters and kills the active timeline', () => {
+  it('hashchange jumps chapters, kills the active timeline, and fires onJump', () => {
     const { chapters, timelines } = makeChapters([2, 1]);
     const hash = makeHash();
     const engine = new StoryEngine(chapters, verbs, hash);
+    let jumped = 0;
+    engine.onJump(() => jumped++);
     engine.next();
     hash.value = '#chapter-2';
     hash.fire();
@@ -177,5 +179,6 @@ describe('StoryEngine', () => {
     expect(engine.state.chapterIndex).toBe(1);
     expect(engine.state.stepIndex).toBe(0);
     expect(engine.state.status).toBe('waiting');
+    expect(jumped).toBe(1);
   });
 });

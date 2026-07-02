@@ -7,6 +7,8 @@ import { Highlighter } from './sync/Highlighter';
 import { ALL_HIGHLIGHT_IDS, type HighlightId } from './scene/locations';
 import { FreePlayPanel } from './ui/FreePlayPanel';
 import { applyOutcome, emptyScoreboard, fire, type Op, type Target } from './story/freeplay';
+import { createQualityWatchdog } from './scene/effects/Neon';
+import { mountStaticFallback } from './fallback/static-page';
 import gsap from 'gsap';
 
 function webglAvailable(): boolean {
@@ -82,11 +84,10 @@ function mountDevHarness(scene: Scene): void {
 }
 
 function boot(): void {
-  if (!webglAvailable()) {
-    // Full fallback arrives in T034; until then, show a plain message.
+  // ?nowebgl forces the fallback (manual testing per quickstart).
+  if (!webglAvailable() || new URLSearchParams(location.search).has('nowebgl')) {
     hideLoading();
-    document.getElementById('app')!.innerHTML =
-      '<div id="fallback"><p class="para">This experience needs WebGL, which your browser does not support.</p></div>';
+    mountStaticFallback();
     return;
   }
 
@@ -95,6 +96,7 @@ function boot(): void {
     document.getElementById('labels-host')!,
   );
   hideLoading();
+  wireQuality(scene);
 
   if (new URLSearchParams(location.search).has('dev')) {
     mountDevHarness(scene);
@@ -102,6 +104,29 @@ function boot(): void {
   }
 
   wireStory(scene);
+}
+
+/** FPS watchdog auto-step-down + manual quality toggle chip (FR-013). */
+function wireQuality(scene: Scene): void {
+  // ?lowq starts with bloom off — weak GPUs, headless smoke tests.
+  if (new URLSearchParams(location.search).has('lowq')) scene.neon.setQuality(false);
+
+  const watchdog = createQualityWatchdog();
+  scene.world.onFps((fps) => {
+    if (watchdog(fps)) scene.neon.setQuality(false);
+  });
+
+  const chip = document.getElementById('settings-chip')!;
+  chip.hidden = false;
+  const btn = document.createElement('button');
+  const render = () => {
+    btn.textContent = scene.neon.isOn ? '✦ Quality: high' : '✧ Quality: low';
+    btn.classList.toggle('on', scene.neon.isOn);
+  };
+  btn.addEventListener('click', () => scene.neon.setQuality(!scene.neon.isOn));
+  scene.neon.onChange(render);
+  render();
+  chip.appendChild(btn);
 }
 
 function wireStory(scene: Scene): void {
@@ -157,6 +182,20 @@ function wireStory(scene: Scene): void {
       scene.reveal(id).progress(1);
     }
   }
+
+  // Hash navigation mid-session: reset the book and start the target chapter.
+  engine.onJump(() => {
+    panel.clear();
+    document.getElementById('panel-controls')!.style.display = '';
+    document.getElementById('freeplay')?.setAttribute('hidden', '');
+    panel.setChapterProgress(engine.state.chapterIndex);
+    engine.next();
+  });
+
+  // Tab hidden → pause; back → resume only what the tab-switch paused (FR-015).
+  document.addEventListener('visibilitychange', () => {
+    engine.handleVisibility(document.hidden);
+  });
 
   panel.setStatus('waiting');
   engine.next(); // Auto-play the first step so the page opens alive.

@@ -80,12 +80,12 @@
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T033 [P] Implement fps watchdog auto-step-down (pure decision function + render-loop feed) and settings chip with manual quality toggle in `src/scene/effects/Neon.ts` + `src/ui/` corner chip; unit test decision function in `tests/unit/quality.test.ts`
-- [ ] T034 [P] Implement no-WebGL fallback `src/fallback/static-page.ts`: inline-SVG labeled building + full story text rendered from `script.ts` (markers → emphasis), switched at bootstrap in `src/main.ts`
-- [ ] T035 [P] Tab-visibility pause/resume (only auto-resume what auto-paused) in `src/story/StoryEngine.ts` + unit test in `tests/unit/story-engine.test.ts`
-- [ ] T036 [P] Finish <900px bottom-drawer responsive layout in `src/styles.css` + drawer toggle in `src/ui/NarrationPanel.ts`
-- [ ] T037 Playwright smoke test in `tests/smoke/story.spec.ts`: page loads, canvas present, Next advances narration text, `#chapter-6` deep-link works; wire into CI ahead of deploy step
-- [ ] T038 Final pass: run full quickstart manual checklist on the deployed Pages site, tune pacing constants in `src/scene/timing.ts`, confirm bundle < 2 MB gzipped, tag `v1.0.0`
+- [X] T033 [P] Implement fps watchdog auto-step-down (pure decision function + render-loop feed) and settings chip with manual quality toggle in `src/scene/effects/Neon.ts` + `src/ui/` corner chip; unit test decision function in `tests/unit/quality.test.ts`
+- [X] T034 [P] Implement no-WebGL fallback `src/fallback/static-page.ts`: inline-SVG labeled building + full story text rendered from `script.ts` (markers → emphasis), switched at bootstrap in `src/main.ts`
+- [X] T035 [P] Tab-visibility pause/resume (only auto-resume what auto-paused) in `src/story/StoryEngine.ts` + unit test in `tests/unit/story-engine.test.ts`
+- [X] T036 [P] Finish <900px bottom-drawer responsive layout in `src/styles.css` + drawer toggle in `src/ui/NarrationPanel.ts`
+- [X] T037 Playwright smoke test in `tests/smoke/story.spec.ts`: page loads, canvas present, Next advances narration text, `#chapter-6` deep-link works; wire into CI ahead of deploy step
+- [X] T038 Final pass: run full quickstart manual checklist on the deployed Pages site, tune pacing constants in `src/scene/timing.ts`, confirm bundle < 2 MB gzipped, tag `v1.0.0`
 
 ## Dependencies & Execution Order
 
