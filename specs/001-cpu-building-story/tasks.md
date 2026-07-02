@@ -71,10 +71,10 @@
 
 **Independent test**: Finish story → fire each op × each location → correct journey, correct cycles, correct tallies.
 
-- [ ] T029 [P] [US3] Implement free-play logic (request resolution, weighted RNG with injectable seed per research D9, cycle lookup, hit/miss rules, scoreboard counters/reset) in `src/story/freeplay.ts`
-- [ ] T030 [P] [US3] Unit test: resolution, weighted distribution with seeded RNG, cycles = latency table (SC-006), scoreboard math in `tests/unit/freeplay.test.ts`
-- [ ] T031 [US3] Implement `src/ui/FreePlayPanel.ts`: op × location pickers, Fire button, live cycle counter animation, scoreboard display, reset; swap into panel on StoryEngine freeplay unlock
-- [ ] T032 [US3] Wire free-play requests to scene journeys (spawn/carry/courier/deliver per resolved location) in `src/story/freeplay.ts` + `src/main.ts`; run quickstart free-play validation
+- [X] T029 [P] [US3] Implement free-play logic (request resolution, weighted RNG with injectable seed per research D9, cycle lookup, hit/miss rules, scoreboard counters/reset) in `src/story/freeplay.ts`
+- [X] T030 [P] [US3] Unit test: resolution, weighted distribution with seeded RNG, cycles = latency table (SC-006), scoreboard math in `tests/unit/freeplay.test.ts`
+- [X] T031 [US3] Implement `src/ui/FreePlayPanel.ts`: op × location pickers, Fire button, live cycle counter animation, scoreboard display, reset; swap into panel on StoryEngine freeplay unlock
+- [X] T032 [US3] Wire free-play requests to scene journeys (spawn/carry/courier/deliver per resolved location) in `src/story/freeplay.ts` + `src/main.ts`; run quickstart free-play validation
 
 **Checkpoint (M5)**: Free play live on the deployed site.
 

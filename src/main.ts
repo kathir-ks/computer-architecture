@@ -5,6 +5,9 @@ import { CHAPTERS } from './story/chapters';
 import { NarrationPanel, defaultPanelRefs } from './ui/NarrationPanel';
 import { Highlighter } from './sync/Highlighter';
 import { ALL_HIGHLIGHT_IDS, type HighlightId } from './scene/locations';
+import { FreePlayPanel } from './ui/FreePlayPanel';
+import { applyOutcome, emptyScoreboard, fire, type Op, type Target } from './story/freeplay';
+import gsap from 'gsap';
 
 function webglAvailable(): boolean {
   try {
@@ -145,10 +148,7 @@ function wireStory(scene: Scene): void {
     setTimeout(() => highlighter.glow(id, false), 1200);
   });
 
-  engine.onFreeplayUnlock(() => {
-    // FreePlayPanel arrives in Phase 5; until then, celebrate quietly.
-    panel.setStatus('waiting');
-  });
+  wireFreePlay(scene, panel, engine);
 
   // Deep links skip chapter 1's tour — reveal the labeled rooms instantly
   // so the learner never lands in a dark building.
@@ -160,6 +160,66 @@ function wireStory(scene: Scene): void {
 
   panel.setStatus('waiting');
   engine.next(); // Auto-play the first step so the page opens alive.
+}
+
+function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine): void {
+  const fp = new FreePlayPanel(document.getElementById('panel')!);
+  let board = emptyScoreboard();
+
+  engine.onFreeplayUnlock(() => {
+    document.getElementById('panel-controls')!.style.display = 'none';
+    panel.showTiming(['registers', 'l1d', 'l2', 'ram', 'disk']);
+    fp.show();
+    fp.updateScoreboard(board);
+  });
+
+  fp.onReset(() => {
+    board = emptyScoreboard();
+    fp.updateScoreboard(board);
+  });
+
+  fp.onFire((op: Op, target: Target) => {
+    const outcome = fire(op, target, Math.random);
+    const tl = gsap.timeline({
+      onComplete: () => {
+        board = applyOutcome(board, outcome);
+        fp.updateScoreboard(board);
+        fp.setBusy(false);
+      },
+    });
+
+    // Check each level in order; every level closer than the answer misses.
+    const ladder = ['l1d', 'l2', 'ram', 'disk'] as const;
+    const depth = ladder.indexOf(outcome.resolved);
+    for (let i = 0; i < depth; i++) tl.add(scene.flash(ladder[i], 'miss'));
+    tl.add(scene.flash(outcome.resolved, outcome.hit ? 'hit' : 'focus'));
+
+    // The journey: STOREs travel outward, LOADs/ADDs travel to the desk.
+    if (op === 'STORE') {
+      const pulse = scene.spawnPulse('registers', 'data');
+      tl.add(pulse.tl);
+      if (outcome.resolved === 'disk') {
+        tl.add(scene.courierTrip(pulse.id, { fastForward: true }));
+        tl.add(scene.deliver(pulse.id, 'disk'));
+      } else {
+        tl.add(scene.carry(pulse.id, 'registers', outcome.resolved));
+        tl.add(scene.deliver(pulse.id, outcome.resolved));
+      }
+    } else {
+      const pulse = scene.spawnPulse(outcome.resolved, 'data');
+      tl.add(pulse.tl);
+      if (outcome.resolved === 'disk') {
+        tl.add(scene.courierTrip(pulse.id, { fastForward: true }));
+      } else {
+        tl.add(scene.carry(pulse.id, outcome.resolved, 'registers'));
+      }
+      tl.add(scene.deliver(pulse.id, 'worker'));
+      tl.add(scene.workerWork(op === 'ADD' ? 'compute' : 'idle'));
+    }
+
+    fp.setBusy(true);
+    fp.showOutcome(outcome, tl.duration());
+  });
 }
 
 boot();
