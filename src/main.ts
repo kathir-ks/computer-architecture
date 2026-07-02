@@ -1,5 +1,8 @@
 import './styles.css';
 import { Scene } from './scene';
+import { StoryEngine } from './story/StoryEngine';
+import { CHAPTERS } from './story/chapters';
+import { NarrationPanel, defaultPanelRefs } from './ui/NarrationPanel';
 
 function webglAvailable(): boolean {
   try {
@@ -93,8 +96,52 @@ function boot(): void {
     return;
   }
 
-  // Story wiring lands in T024.
-  scene.flyTo('building-front');
+  wireStory(scene);
+}
+
+function wireStory(scene: Scene): void {
+  const panel = new NarrationPanel(defaultPanelRefs());
+  const engine = new StoryEngine(CHAPTERS, scene);
+
+  panel.initProgress(CHAPTERS.length);
+
+  engine.onStep((e) => {
+    const step = e.chapter.steps[e.stepIndex];
+    if (e.isChapterStart) {
+      panel.addChapterTitle(e.chapter.title);
+      panel.setChapterProgress(e.chapterIndex);
+    }
+    panel.addParagraph(step.narration);
+    if (step.timing) panel.showTiming(step.timing);
+    else panel.hideTiming();
+  });
+
+  engine.onStatus((s) => panel.setStatus(s));
+
+  panel.onNext(() => engine.next());
+  panel.onPauseToggle(() => {
+    if (engine.state.status === 'paused') engine.resume();
+    else engine.pause();
+  });
+
+  // Basic term↔scene glow (deepened in Phase 4 with the Highlighter registry).
+  panel.onTermHover((id, on) => scene.setGlow(id as never, on));
+
+  engine.onFreeplayUnlock(() => {
+    // FreePlayPanel arrives in Phase 5; until then, celebrate quietly.
+    panel.setStatus('waiting');
+  });
+
+  // Deep links skip chapter 1's tour — reveal the labeled rooms instantly
+  // so the learner never lands in a dark building.
+  if (engine.state.chapterIndex > 0) {
+    for (const id of ['l1i', 'l1d', 'l2', 'ram', 'disk'] as const) {
+      scene.reveal(id).progress(1);
+    }
+  }
+
+  panel.setStatus('waiting');
+  engine.next(); // Auto-play the first step so the page opens alive.
 }
 
 boot();

@@ -39,16 +39,16 @@
 
 **Independent test**: Click Next through all 8 chapters; pause/resume mid-animation; orbit during playback; reload with `#chapter-6`.
 
-- [ ] T015 [P] [US1] Define `Chapter`/`Step` types and `parseMarkers()` pure function (with malformed-marker errors) in `src/story/types.ts` and `src/story/markers.ts`
-- [ ] T016 [P] [US1] Unit test: marker parser round-trip + malformed cases in `tests/unit/markers.test.ts`
-- [ ] T017 [US1] Implement `src/story/StoryEngine.ts`: state machine per data-model.md (waiting/playing/paused, next with fast-forward-no-overlap, pause/resume, chapter advance, freeplay unlock event, `#chapter-N` hash read/write with invalid→1 clamp)
-- [ ] T018 [US1] Unit test: StoryEngine transitions, mash-Next fast-forward, hash clamp in `tests/unit/story-engine.test.ts` (GSAP mocked with instant timelines)
-- [ ] T019 [US1] Implement `src/ui/NarrationPanel.ts`: book-style accumulating paragraphs (previous dimmed), chapter/step progress, Next button (pulses when waiting), pause/resume control, `showTiming()` latency bar
-- [ ] T020 [US1] Write all 8 chapters' narration with `[[id:term]]` markers in `src/story/script.ts` (teaching voice per design doc: Worker, ticket dispenser, drawers, miss cascade foot-tap, "…millions of cycles later" gag, recap ladder; ch3 must include a beat explaining instruction cards were sent up to the L1i shelf in batches earlier — plants prefetch intuition)
-- [ ] T021 [US1] Implement chapter cue functions `src/story/chapters/ch1-welcome.ts` through `ch4-decode.ts` (tour reveal sequence, worker's job, fetch via L1i, decode card split) using only `SceneVerbs`
-- [ ] T022 [US1] Implement `src/story/chapters/ch5-execute.ts` through `ch8-recap.ts` (L1d hit + drawer store, L1→L2→RAM miss cascade with `showTiming`, courier disk trip with fast-forward, recap ladder + freeplay unlock signal)
-- [ ] T023 [US1] Unit test: cue-integrity dry-run — every chapter builds against a stub `SceneVerbs`, only contract verbs called, every narration marker id exists in the `locations.ts` id table, every chapter ≥1 step, in `tests/unit/cue-integrity.test.ts` (registry cross-check happens in T026)
-- [ ] T024 [US1] Wire bootstrap in `src/main.ts`: world + panel + engine + chapters, remove loading overlay, run quickstart chapter checklist items 1–8 manually and fix choreography
+- [X] T015 [P] [US1] Define `Chapter`/`Step` types and `parseMarkers()` pure function (with malformed-marker errors) in `src/story/types.ts` and `src/story/markers.ts`
+- [X] T016 [P] [US1] Unit test: marker parser round-trip + malformed cases in `tests/unit/markers.test.ts`
+- [X] T017 [US1] Implement `src/story/StoryEngine.ts`: state machine per data-model.md (waiting/playing/paused, next with fast-forward-no-overlap, pause/resume, chapter advance, freeplay unlock event, `#chapter-N` hash read/write with invalid→1 clamp)
+- [X] T018 [US1] Unit test: StoryEngine transitions, mash-Next fast-forward, hash clamp in `tests/unit/story-engine.test.ts` (GSAP mocked with instant timelines)
+- [X] T019 [US1] Implement `src/ui/NarrationPanel.ts`: book-style accumulating paragraphs (previous dimmed), chapter/step progress, Next button (pulses when waiting), pause/resume control, `showTiming()` latency bar
+- [X] T020 [US1] Write all 8 chapters' narration with `[[id:term]]` markers in `src/story/script.ts` (teaching voice per design doc: Worker, ticket dispenser, drawers, miss cascade foot-tap, "…millions of cycles later" gag, recap ladder; ch3 must include a beat explaining instruction cards were sent up to the L1i shelf in batches earlier — plants prefetch intuition)
+- [X] T021 [US1] Implement chapter cue functions `src/story/chapters/ch1-welcome.ts` through `ch4-decode.ts` (tour reveal sequence, worker's job, fetch via L1i, decode card split) using only `SceneVerbs`
+- [X] T022 [US1] Implement `src/story/chapters/ch5-execute.ts` through `ch8-recap.ts` (L1d hit + drawer store, L1→L2→RAM miss cascade with `showTiming`, courier disk trip with fast-forward, recap ladder + freeplay unlock signal)
+- [X] T023 [US1] Unit test: cue-integrity dry-run — every chapter builds against a stub `SceneVerbs`, only contract verbs called, every narration marker id exists in the `locations.ts` id table, every chapter ≥1 step, in `tests/unit/cue-integrity.test.ts` (registry cross-check happens in T026)
+- [X] T024 [US1] Wire bootstrap in `src/main.ts`: world + panel + engine + chapters, remove loading overlay, run quickstart chapter checklist items 1–8 manually and fix choreography
 
 **Checkpoint (M3+M4 story half)**: Full story playable on the deployed site — this is the MVP.
 
