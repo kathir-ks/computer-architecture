@@ -3,9 +3,13 @@ node_modules/
 dist/
 playwright-report/
 test-results/
+coverage/
+.vite/
 *.log
+npm-debug.log*
 .env*
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
