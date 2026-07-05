@@ -9,6 +9,8 @@ export const TIMING = {
   courierTripFast: 3,
   /** Default camera fly-to duration. */
   flyTo: 1.6,
+  /** Default camera follow duration (chapters usually pass the trip's own). */
+  follow: 3,
   /** Short beats: flashes, drawer opens, card split. */
   beat: 0.7,
 } as const;

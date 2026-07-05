@@ -58,12 +58,12 @@
 
 **Independent Test**: Quickstart "US3 — Follow camera" checklist: ch7 van tracked door-to-door, ch6 lift ride tracked, grab kills tracking instantly, pause freezes it, delivered-pulse follow settles cleanly.
 
-- [ ] T016 [US3] Add `TIMING.follow` default to `src/scene/timing.ts` and implement `follow(target, opts?)` in `src/scene/index.ts` per research R3: progress-proxy tween whose `onUpdate` lerps `controls.target` toward the resolved object (courier group / lift car / pulse mesh), registered in the shared `activeCameraTl` slot, last-known-position freeze on disposed pulse (FR-011)
-- [ ] T017 [US3] Update the contract trio in lockstep: add `follow` + `FollowTarget` to the `SceneVerbs` interface in `src/scene/index.ts` (done in T016), to `specs/001-cpu-building-story/contracts/scene-verbs.md`, and to `CONTRACT_VERBS` in `tests/unit/cue-integrity.test.ts`; add a `follow` button to the `?dev` harness in `src/main.ts`
-- [ ] T018 [P] [US3] Unit tests for follow lifecycle in `tests/unit/camera-arc.test.ts` (stubbed GSAP/objects, FakeTimeline pattern from `tests/unit/story-engine.test.ts`): starting follow kills prior camera timeline, flyTo kills follow, user-grab kills follow, disposed-target freeze, default duration from `TIMING.follow`
-- [ ] T019 [US3] Retune chapters `src/story/chapters/ch1-welcome.ts` … `ch4-decode.ts`: adjust `flyTo` usage for the new framing; cue counts frozen (makeChapter guard must not fire)
-- [ ] T020 [US3] Retune chapters `src/story/chapters/ch5-execute.ts` … `ch8-recap.ts`: compose `follow` into existing cue timelines for the ch6 miss-cascade lift rides and ch7 courier trip (follow duration = trip duration); cue counts frozen
-- [ ] T021 [US3] Validate: quickstart US3 checklist (grab/pause/disposal cases) + full `npm run test`; eyeball ch1/ch8 framing
+- [X] T016 [US3] Add `TIMING.follow` default to `src/scene/timing.ts` and implement `follow(target, opts?)` in `src/scene/index.ts` per research R3: progress-proxy tween whose `onUpdate` lerps `controls.target` toward the resolved object (courier group / lift car / pulse mesh), registered in the shared `activeCameraTl` slot, last-known-position freeze on disposed pulse (FR-011)
+- [X] T017 [US3] Update the contract trio in lockstep: add `follow` + `FollowTarget` to the `SceneVerbs` interface in `src/scene/index.ts` (done in T016), to `specs/001-cpu-building-story/contracts/scene-verbs.md`, and to `CONTRACT_VERBS` in `tests/unit/cue-integrity.test.ts`; add a `follow` button to the `?dev` harness in `src/main.ts`
+- [X] T018 [P] [US3] Unit tests for follow lifecycle in `tests/unit/camera-arc.test.ts` (stubbed GSAP/objects, FakeTimeline pattern from `tests/unit/story-engine.test.ts`): starting follow kills prior camera timeline, flyTo kills follow, user-grab kills follow, disposed-target freeze, default duration from `TIMING.follow`
+- [X] T019 [US3] Retune chapters `src/story/chapters/ch1-welcome.ts` … `ch4-decode.ts`: adjust `flyTo` usage for the new framing; cue counts frozen (makeChapter guard must not fire)
+- [X] T020 [US3] Retune chapters `src/story/chapters/ch5-execute.ts` … `ch8-recap.ts`: compose `follow` into existing cue timelines for the ch6 miss-cascade lift rides and ch7 courier trip (follow duration = trip duration); cue counts frozen
+- [X] T021 [US3] Validate: quickstart US3 checklist (grab/pause/disposal cases) + full `npm run test`; eyeball ch1/ch8 framing
 
 **Checkpoint (M3)**: Deployable — cinematic tracking on the restyled cutaway.
 

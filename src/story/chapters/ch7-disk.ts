@@ -11,7 +11,12 @@ export default makeChapter(7, [
       const pulse = v.spawnPulse('disk', 'data');
       return seq(
         pulse.tl,
-        together(v.courierTrip(pulse.id, { fastForward: true }), v.workerWork('foot-tap')),
+        together(
+          v.courierTrip(pulse.id, { fastForward: true }),
+          // Camera tracks the van door-to-door; trip and follow end together.
+          v.follow('courier', { duration: 3 }),
+          v.workerWork('foot-tap'),
+        ),
         together(v.deliver(pulse.id, 'worker'), v.flyTo('floor10-desk')),
       );
     },

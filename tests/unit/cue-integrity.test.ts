@@ -8,6 +8,7 @@ import type { SceneVerbs } from '../../src/scene';
 /** Verbs allowed by contracts/scene-verbs.md. */
 const CONTRACT_VERBS = [
   'flyTo',
+  'follow',
   'reveal',
   'flash',
   'workerWork',

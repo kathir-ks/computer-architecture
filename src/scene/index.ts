@@ -27,8 +27,62 @@ export type Mood = 'intro' | 'working' | 'tense-miss' | 'celebration';
  * The ONLY interface the story layer may call (contract: scene-verbs.md).
  * The cue-integrity test runs chapters against a stub of this type.
  */
+/** What the follow verb may track (contract: scene-verbs-v2.md). */
+export type FollowTarget = 'courier' | 'lift' | PulseId;
+
+/**
+ * The single scripted-camera slot: flyTo and follow both register here, so
+ * starting either kills the other, and a user grab kills whichever is active.
+ * Pure bookkeeping — unit-tested with fake timelines.
+ */
+export class CameraSlot {
+  private tl: { kill(): void } | null = null;
+
+  /** Kill the current owner (if any) and install a new one. */
+  acquire(tl: { kill(): void }): void {
+    this.tl?.kill();
+    this.tl = tl;
+  }
+
+  /** Called from a timeline's onComplete — only clears if still the owner. */
+  release(tl: { kill(): void }): void {
+    if (this.tl === tl) this.tl = null;
+  }
+
+  /** User grab: kill and clear whatever scripted move is running. */
+  killActive(): void {
+    this.tl?.kill();
+    this.tl = null;
+  }
+}
+
+/**
+ * Aim updater for follow: tracks the target's last known world position so a
+ * disposed pulse (delivered mid-follow) leaves the aim settling at its final
+ * spot rather than chasing a vanished object (FR-011). Pure — unit-tested.
+ */
+export function createFollowAim(
+  resolve: () => THREE.Object3D | null,
+  aim: THREE.Vector3,
+  lerp = 0.08,
+): () => void {
+  const last = new THREE.Vector3();
+  resolve()?.getWorldPosition(last);
+  return () => {
+    resolve()?.getWorldPosition(last);
+    aim.lerp(last, lerp);
+  };
+}
+
 export interface SceneVerbs {
   flyTo(target: VantageId, opts?: { duration?: number }): gsap.core.Timeline;
+  /**
+   * Keep the camera aimed at a moving element for a bounded duration.
+   * Aim-only (eases controls.target); shares the single scripted-camera slot
+   * with flyTo; killed instantly by user grab. A disposed pulse target freezes
+   * the aim at its last position (FR-011).
+   */
+  follow(target: FollowTarget, opts?: { duration?: number }): gsap.core.Timeline;
   reveal(id: LocationId): gsap.core.Timeline;
   flash(id: LocationId, kind: 'hit' | 'miss' | 'focus'): gsap.core.Timeline;
   workerWork(kind: WorkKind): gsap.core.Timeline;
@@ -75,7 +129,7 @@ export class Scene implements SceneVerbs {
   readonly pulses: Pulses;
   readonly neon: Neon;
 
-  private activeCameraTl: gsap.core.Timeline | null = null;
+  private cameraSlot = new CameraSlot();
 
   constructor(canvasHost: HTMLElement, labelsHost: HTMLElement) {
     this.world = new World(canvasHost, labelsHost);
@@ -92,10 +146,7 @@ export class Scene implements SceneVerbs {
     for (const m of this.courier.clickTargets) this.building.addClickable(m, 'disk');
 
     // User input instantly wins over scripted camera moves (FR-006).
-    this.world.onUserGrab(() => {
-      this.activeCameraTl?.kill();
-      this.activeCameraTl = null;
-    });
+    this.world.onUserGrab(() => this.cameraSlot.killActive());
 
     this.world.start();
   }
@@ -130,11 +181,7 @@ export class Scene implements SceneVerbs {
   flyTo(target: VantageId, opts?: { duration?: number }): gsap.core.Timeline {
     const v = VANTAGES[target];
     const dur = opts?.duration ?? TIMING.flyTo;
-    const tl = gsap.timeline({
-      onComplete: () => {
-        if (this.activeCameraTl === tl) this.activeCameraTl = null;
-      },
-    });
+    const tl = gsap.timeline({ onComplete: () => this.cameraSlot.release(tl) });
     tl.to(this.world.camera.position, {
       x: v.pos[0],
       y: v.pos[1],
@@ -147,8 +194,24 @@ export class Scene implements SceneVerbs {
       { x: v.target[0], y: v.target[1], z: v.target[2], duration: dur, ease: 'power2.inOut' },
       '<',
     );
-    this.activeCameraTl?.kill();
-    this.activeCameraTl = tl;
+    this.cameraSlot.acquire(tl);
+    return tl;
+  }
+
+  follow(target: FollowTarget, opts?: { duration?: number }): gsap.core.Timeline {
+    const dur = opts?.duration ?? TIMING.follow;
+    const resolve = (): THREE.Object3D | null =>
+      target === 'courier'
+        ? this.courier.vanGroup
+        : target === 'lift'
+          ? this.lift.carMesh
+          : (this.pulses.meshOf(target) ?? null);
+
+    const aim = createFollowAim(resolve, this.world.controls.target);
+    const proxy = { t: 0 };
+    const tl = gsap.timeline({ onComplete: () => this.cameraSlot.release(tl) });
+    tl.to(proxy, { t: 1, duration: dur, ease: 'none', onUpdate: aim });
+    this.cameraSlot.acquire(tl);
     return tl;
   }
 

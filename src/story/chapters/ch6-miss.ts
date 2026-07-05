@@ -16,7 +16,9 @@ export default makeChapter(6, [
         together(
           v.carry(pulse.id, 'ram', 'registers'),
           v.workerWork('foot-tap'),
-          v.flyTo('lift-shaft', { duration: 2.5 }),
+          // Track the lift car for the whole 6-floor ride (car approach 0.5s
+          // + slide-in 0.45s + ride 2.7s ≈ carry duration).
+          v.follow('lift', { duration: 4.1 }),
         ),
         together(v.deliver(pulse.id, 'worker'), v.flyTo('floor10-desk')),
       );

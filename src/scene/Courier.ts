@@ -41,6 +41,11 @@ export class Courier {
     scene.add(this.group);
   }
 
+  /** The group the follow verb tracks during trips. */
+  get vanGroup(): THREE.Group {
+    return this.van;
+  }
+
   setGlow(on: boolean): void {
     for (const t of this.clickTargets)
       (t.material as THREE.MeshStandardMaterial).emissiveIntensity = on ? 1.0 : 0.25;

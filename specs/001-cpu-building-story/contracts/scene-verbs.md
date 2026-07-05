@@ -9,6 +9,15 @@ export interface SceneVerbs {
   // ---- camera ----
   /** Ease camera + orbit target to a named vantage. Killed instantly by user pointerdown. */
   flyTo(target: VantageId, opts?: { duration?: number }): Timeline;
+  /**
+   * Keep the camera aimed at a moving element (courier van, lift car, or a
+   * pulse) for a bounded duration — aim-only tracking shot from outside the
+   * cutaway (added by feature 002, contract delta: scene-verbs-v2.md).
+   * Shares one scripted-camera slot with flyTo: starting either kills the
+   * other; user pointerdown kills whichever holds the slot. Following a pulse
+   * that gets delivered is legal — the aim settles at its last position.
+   */
+  follow(target: 'courier' | 'lift' | PulseId, opts?: { duration?: number }): Timeline;
 
   // ---- building ----
   /** Turn a floor/location's lights + label on (chapter 1 tour). */
