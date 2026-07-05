@@ -5,6 +5,7 @@ import { anchorFor, Building } from './Building';
 import { Worker, type RegisterName, type WorkKind } from './Worker';
 import { Lift } from './Lift';
 import { Courier } from './Courier';
+import { Environment } from './Environment';
 import { Pulses, type PulseId, type PulseTint } from './effects/Pulse';
 import { Neon } from './effects/Neon';
 import type { HighlightId, LocationId } from './locations';
@@ -128,12 +129,15 @@ export class Scene implements SceneVerbs {
   readonly courier: Courier;
   readonly pulses: Pulses;
   readonly neon: Neon;
+  readonly environment: Environment;
 
   private cameraSlot = new CameraSlot();
 
   constructor(canvasHost: HTMLElement, labelsHost: HTMLElement) {
     this.world = new World(canvasHost, labelsHost);
     this.building = new Building(this.world);
+    // Set dressing only — registers nothing clickable, unknown to the story.
+    this.environment = new Environment(this.world.scene, (cb) => this.world.onFrame(cb));
     this.pulses = new Pulses(this.world.scene);
     this.worker = new Worker(this.world.scene);
     this.lift = new Lift(this.world.scene, this.pulses);

@@ -73,10 +73,10 @@
 
 **Independent Test**: Quickstart "US4 — Living environment" checklist: props present, clouds drift smoothly over 30 s, clicks do nothing, van path unobstructed, fps holds.
 
-- [ ] T022 [P] [US4] Implement `src/scene/Environment.ts` per research R7: 5–7 pastel neighbor buildings, 8–12 trees, 4–6 streetlights (emissive heads), 4–6 clouds in one drift group; static props merged via `BufferGeometryUtils.mergeGeometries` (≤ ~60 added draw calls); exactly one `world.onFrame` callback for cloud drift+wrap, zero per-frame allocations; props placed clear of the road corridor and warehouse apron
-- [ ] T023 [P] [US4] Unit test in `tests/unit/environment.test.ts`: constructing Environment (three mocked/headless) registers zero click targets and exactly one frame callback; prop counts within the data-model ranges
-- [ ] T024 [US4] Instantiate `Environment` in the `Scene` constructor in `src/scene/index.ts` (after Building, before effects); confirm nothing is passed to `addClickable`
-- [ ] T025 [US4] Validate: quickstart US4 checklist + `?fps` on integrated graphics with environment active (30+), `?lowq` run, `npm run test` green
+- [X] T022 [P] [US4] Implement `src/scene/Environment.ts` per research R7: 5–7 pastel neighbor buildings, 8–12 trees, 4–6 streetlights (emissive heads), 4–6 clouds in one drift group; static props merged via `BufferGeometryUtils.mergeGeometries` (≤ ~60 added draw calls); exactly one `world.onFrame` callback for cloud drift+wrap, zero per-frame allocations; props placed clear of the road corridor and warehouse apron
+- [X] T023 [P] [US4] Unit test in `tests/unit/environment.test.ts`: constructing Environment (three mocked/headless) registers zero click targets and exactly one frame callback; prop counts within the data-model ranges
+- [X] T024 [US4] Instantiate `Environment` in the `Scene` constructor in `src/scene/index.ts` (after Building, before effects); confirm nothing is passed to `addClickable`
+- [X] T025 [US4] Validate: quickstart US4 checklist + `?fps` on integrated graphics with environment active (30+), `?lowq` run, `npm run test` green
 
 **Checkpoint (M4)**: Deployable — full v2 visual experience.
 
