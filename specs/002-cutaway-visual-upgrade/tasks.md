@@ -82,10 +82,10 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T026 Run the full quickstart "Cross-cutting regression" list: deep-link `#chapter-6`, `?lowq`, `?nowebgl` fallback (narration byte-identical), highlight sync both directions, 800px drawer layout, free-play journeys/cycle counts
-- [ ] T027 `npm run build` (bundle still < 2 MB gzipped vs T001 baseline) then `npm run test:smoke` — all 4 Playwright tests green against the built site
-- [ ] T028 [P] Update `README.md` look-and-feel description/screenshots reference and add any new hard-won gotchas (e.g., transparent lift tube depthWrite, orbit clamp values) to `CLAUDE.md`
-- [ ] T029 Final deploy prep: commit per milestone if not already done; tag `v2.0.0` once the manual checklist and CI are green
+- [X] T026 Run the full quickstart "Cross-cutting regression" list: deep-link `#chapter-6`, `?lowq`, `?nowebgl` fallback (narration byte-identical), highlight sync both directions, 800px drawer layout, free-play journeys/cycle counts
+- [X] T027 `npm run build` (bundle still < 2 MB gzipped vs T001 baseline) then `npm run test:smoke` — all 4 Playwright tests green against the built site
+- [X] T028 [P] Update `README.md` look-and-feel description/screenshots reference and add any new hard-won gotchas (e.g., transparent lift tube depthWrite, orbit clamp values) to `CLAUDE.md`
+- [X] T029 Final deploy prep: commit per milestone if not already done; tag `v2.0.0` once the manual checklist and CI are green
 
 ## Dependencies & Execution Order
 

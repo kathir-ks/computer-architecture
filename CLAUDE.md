@@ -23,7 +23,7 @@ choreography testing), `?lowq` (start with bloom off; headless/weak GPUs),
 **Scene–Story separation is NON-NEGOTIABLE** (constitution II, enforced by
 `tests/unit/cue-integrity.test.ts`):
 
-- `src/scene/` exposes animation **verbs** (`carry`, `flash`, `flyTo`, `courierTrip`…)
+- `src/scene/` exposes animation **verbs** (`carry`, `flash`, `flyTo`, `follow`, `courierTrip`…)
   via the `SceneVerbs` interface in `src/scene/index.ts`. It never knows what chapter
   is playing. The verb contract is documented in
   `specs/001-cpu-building-story/contracts/scene-verbs.md` — keep interface, doc, and
@@ -63,6 +63,16 @@ in `tests/unit/story-engine.test.ts`).
   if rollup fails with MODULE_NOT_FOUND, delete `node_modules` and reinstall — do NOT
   add the package to `package.json` directly, since that forces it as a mandatory dep
   on every platform and breaks `npm ci` on Linux CI runners (EBADPLATFORM).
+- Camera verbs (`flyTo`, `follow`) share one `CameraSlot` — creating either kills the
+  previous owner *at cue build time*. That's safe: GSAP's `add()` revives a killed
+  child timeline (verified empirically), which is also why v1's chained flyTos worked.
+- The lift's glass tube must keep `depthWrite: false` (single convex transparent
+  shell) — anything else brings back transparency-sorting artifacts around the car.
+- User orbit is clamped to `VIEW_ARC` (azimuth ±80° from the open +z face, polar
+  0.15π–0.52π). Any new `VANTAGES` entry must sit inside it — `camera-arc.test.ts`
+  fails otherwise. Nothing story-relevant may be placed behind the building.
+- Colors live only in `PALETTE` (`src/scene/Building.ts`); `Environment.ts` is inert
+  set dressing — it must never register clickables or gain scene verbs.
 
 ## Spec-driven workflow
 

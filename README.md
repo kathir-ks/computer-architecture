@@ -14,6 +14,12 @@ An 8-chapter guided story covers the fetch–decode–execute cycle and the memo
 hierarchy, then a **free-play mode** lets you fire your own instructions and watch the
 cycle counter climb.
 
+**v2 look**: the tower is an open-faced *dollhouse cutaway* in pastel daylight — every
+room stays visible while the story plays, the camera is clamped to a front viewing arc
+so the action can never hide behind a wall, tracking shots follow the courier van and
+the lift on long trips, and the building sits in a small living neighborhood (trees,
+streetlights, drifting clouds).
+
 ## Run it locally
 
 ```bash
@@ -43,6 +49,7 @@ boundary: `src/scene/` exposes animation *verbs* (`lift.carry(...)`,
 verbs into GSAP timelines and never touches a mesh. All narration lives in one file,
 `src/story/script.ts`.
 
-This project is spec-driven — see `specs/001-cpu-building-story/` for the full
-specification, plan, and task breakdown, and `docs/superpowers/specs/` for the founding
-design document.
+This project is spec-driven — see `specs/001-cpu-building-story/` (the original
+story feature) and `specs/002-cutaway-visual-upgrade/` (the v2 visual/camera upgrade)
+for specifications, plans, and task breakdowns, and `docs/superpowers/specs/` for the
+founding design document.
