@@ -44,16 +44,31 @@ export function anchorFor(id: HighlightId): THREE.Vector3 {
   }
 }
 
-const COL = {
-  slab: 0x2a3350,
-  wall: 0x1a2138,
-  darkRoom: 0x131a2e,
-  neon: 0x00e5ff,
-  shelf: 0x3b4c78,
-  archive: 0x35558a,
+/**
+ * Single source of the scene's color coding (data-model FloorPalette).
+ * Functional floor groups get distinct hues; structure stays neutral;
+ * signals must remain pairwise distinguishable against room surfaces.
+ */
+export const PALETTE = {
+  desk: 0x1a2138, // floor 10 dressing
+  l1: 0x3b4c78, // floor 9 shelves
+  l2: 0x3b4c78, // floor 8 storeroom
+  ram: 0x35558a, // floor 4 archive
+  emptyFloor: 0x131a2e, // floors 1-3, 5-7
   warehouse: 0x2e2a45,
-  ground: 0x0e1424,
-  road: 0x181f33,
+  structure: {
+    slab: 0x2a3350,
+    wall: 0x1a2138,
+    ground: 0x0e1424,
+    road: 0x181f33,
+  },
+  sky: 0x0a0e1a, // World background + fog
+  accent: 0x00e5ff, // edge lines, focus glow
+  signals: {
+    hit: 0x2affb0,
+    miss: 0xff4060,
+    focus: 0x00e5ff,
+  },
 };
 
 interface Room {
@@ -84,13 +99,13 @@ export class Building {
     this.buildRoom('l2', 'L2 · storeroom', new THREE.Vector3(0.5, 0, -0.5), 8, {
       w: 9,
       d: 6,
-      color: COL.shelf,
+      color: PALETTE.l2,
       crates: 8,
     });
     this.buildRoom('ram', 'RAM · archive', new THREE.Vector3(0.5, 0, 0), 4, {
       w: 12,
       d: 7,
-      color: COL.archive,
+      color: PALETTE.ram,
       crates: 16,
     });
     this.buildWarehouse();
@@ -99,13 +114,13 @@ export class Building {
   }
 
   private shelfProps() {
-    return { w: 4.6, d: 5, color: COL.shelf, crates: 5 };
+    return { w: 4.6, d: 5, color: PALETTE.l1, crates: 5 };
   }
 
   private buildGround(): void {
     const ground = new THREE.Mesh(
       new THREE.CylinderGeometry(70, 70, 0.4, 48),
-      new THREE.MeshStandardMaterial({ color: COL.ground }),
+      new THREE.MeshStandardMaterial({ color: PALETTE.structure.ground }),
     );
     ground.position.y = -0.2;
     this.group.add(ground);
@@ -113,7 +128,7 @@ export class Building {
     // Road from building to warehouse.
     const road = new THREE.Mesh(
       new THREE.BoxGeometry(22, 0.05, 4),
-      new THREE.MeshStandardMaterial({ color: COL.road }),
+      new THREE.MeshStandardMaterial({ color: PALETTE.structure.road }),
     );
     road.position.set((WAREHOUSE_POS.x - BLD_W / 2) / 2 - BLD_W / 4, 0.03, WAREHOUSE_POS.z);
     this.group.add(road);
@@ -121,7 +136,7 @@ export class Building {
 
   private buildTower(): void {
     const slabGeo = new THREE.BoxGeometry(BLD_W, 0.25, BLD_D);
-    const slabMat = new THREE.MeshStandardMaterial({ color: COL.slab });
+    const slabMat = new THREE.MeshStandardMaterial({ color: PALETTE.structure.slab });
     for (let f = 1; f <= FLOORS + 1; f++) {
       const slab = new THREE.Mesh(slabGeo, slabMat);
       slab.position.y = floorBaseY(f) - 0.125;
@@ -129,7 +144,7 @@ export class Building {
     }
 
     // Back wall and side walls — front (+z) stays open for the cutaway.
-    const wallMat = new THREE.MeshStandardMaterial({ color: COL.wall });
+    const wallMat = new THREE.MeshStandardMaterial({ color: PALETTE.structure.wall });
     const back = new THREE.Mesh(
       new THREE.BoxGeometry(BLD_W, FLOORS * FLOOR_H, 0.25),
       wallMat,
@@ -145,7 +160,7 @@ export class Building {
     }
 
     // Dim boxes suggesting unused dark floors (1-3, 5-7).
-    const darkMat = new THREE.MeshStandardMaterial({ color: COL.darkRoom });
+    const darkMat = new THREE.MeshStandardMaterial({ color: PALETTE.emptyFloor });
     for (const f of [1, 2, 3, 5, 6, 7]) {
       const filler = new THREE.Mesh(new THREE.BoxGeometry(BLD_W - 4.5, FLOOR_H - 1.2, BLD_D - 3), darkMat);
       filler.position.set(0.8, floorCenterY(f), -0.6);
@@ -158,7 +173,7 @@ export class Building {
     );
     const outline = new THREE.LineSegments(
       outlineGeo,
-      new THREE.LineBasicMaterial({ color: COL.neon, transparent: true, opacity: 0.8 }),
+      new THREE.LineBasicMaterial({ color: PALETTE.accent, transparent: true, opacity: 0.8 }),
     );
     outline.position.y = (FLOORS * FLOOR_H) / 2;
     this.group.add(outline);
@@ -236,8 +251,8 @@ export class Building {
     const group = new THREE.Group();
     const mats: THREE.MeshStandardMaterial[] = [];
     const mat = new THREE.MeshStandardMaterial({
-      color: COL.warehouse,
-      emissive: COL.warehouse,
+      color: PALETTE.warehouse,
+      emissive: PALETTE.warehouse,
       emissiveIntensity: 0.15,
     });
     mats.push(mat);
@@ -336,7 +351,7 @@ export class Building {
     const room = this.rooms.get(id);
     const tl = gsap.timeline();
     if (!room) return tl;
-    const color = kind === 'hit' ? 0x2affb0 : kind === 'miss' ? 0xff4060 : 0x00e5ff;
+    const color = PALETTE.signals[kind];
     for (const m of room.mats) {
       const orig = m.emissive.getHex();
       tl.call(() => m.emissive.setHex(color), undefined, 0);

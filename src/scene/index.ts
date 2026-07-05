@@ -43,7 +43,7 @@ export interface SceneVerbs {
   setMood(mood: Mood): gsap.core.Timeline;
 }
 
-const VANTAGES: Record<VantageId, { pos: [number, number, number]; target: [number, number, number] }> = {
+export const VANTAGES: Record<VantageId, { pos: [number, number, number]; target: [number, number, number] }> = {
   street: { pos: [6, 3, 44], target: [0, 10, 0] },
   'building-front': { pos: [20, 18, 32], target: [0, 14, 0] },
   'floor10-desk': { pos: [9, 31, 11], target: [3.2, 28.8, 0] },

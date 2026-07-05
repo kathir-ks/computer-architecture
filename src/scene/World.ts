@@ -1,6 +1,18 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { PALETTE } from './Building';
+
+/**
+ * Allowed camera orbit range (data-model ViewingArc): a front arc from which
+ * every cutaway room stays visible. Azimuth is measured from +z (the open face).
+ */
+export const VIEW_ARC = {
+  minAzimuth: (-80 * Math.PI) / 180,
+  maxAzimuth: (80 * Math.PI) / 180,
+  minPolar: Math.PI * 0.15,
+  maxPolar: Math.PI * 0.52,
+};
 
 /**
  * Owns renderer, camera, orbit controls, label overlay and the render loop.
@@ -37,8 +49,8 @@ export class World {
     this.labelRenderer.setSize(w, h);
     labelsHost.appendChild(this.labelRenderer.domElement);
 
-    this.scene.background = new THREE.Color(0x0a0e1a);
-    this.scene.fog = new THREE.Fog(0x0a0e1a, 60, 140);
+    this.scene.background = new THREE.Color(PALETTE.sky);
+    this.scene.fog = new THREE.Fog(PALETTE.sky, 60, 140);
 
     this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 300);
     this.camera.position.set(28, 22, 34);

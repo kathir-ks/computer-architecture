@@ -11,15 +11,15 @@
 
 **Purpose**: Baseline safety net before touching a shipped app.
 
-- [ ] T001 Verify green baseline on clean tree: `npm run test`, `npm run build`, `npm run test:smoke` all pass; note bundle size from build output as the < 2 MB reference (no file changes)
-- [ ] T002 Commit the 002 spec/plan artifacts (`specs/002-cutaway-visual-upgrade/`, `.specify/feature.json`, CLAUDE.md managed-section update) — constitution: plans are committed before implementation
+- [X] T001 Verify green baseline on clean tree: `npm run test`, `npm run build`, `npm run test:smoke` all pass; note bundle size from build output as the < 2 MB reference (no file changes)
+- [X] T002 Commit the 002 spec/plan artifacts (`specs/002-cutaway-visual-upgrade/`, `.specify/feature.json`, CLAUDE.md managed-section update) — constitution: plans are committed before implementation
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
 **Purpose**: Shared structures both US1 (geometry) and US2 (colors) edit — extracting them first prevents the two stories from colliding in `Building.ts`.
 
-- [ ] T003 Refactor color constants into a structured `PALETTE` export in `src/scene/Building.ts` with the data-model keys (`desk`, `l1`, `l2`, `ram`, `emptyFloor`, `warehouse`, `structure.{slab,wall,ground,road}`, `sky`, `signals.{hit,miss,focus}`), still holding the v1 values; thread all existing materials (Building, World background/fog, flash colors) through it — pure refactor, zero visual change, tests stay green
-- [ ] T004 [P] Export the `VANTAGES` table and add a `VIEW_ARC` constant (min/max azimuth, min/max polar per research R1) from `src/scene/index.ts` / `src/scene/World.ts` so tests can import both (no behavior change yet)
+- [X] T003 Refactor color constants into a structured `PALETTE` export in `src/scene/Building.ts` with the data-model keys (`desk`, `l1`, `l2`, `ram`, `emptyFloor`, `warehouse`, `structure.{slab,wall,ground,road}`, `sky`, `signals.{hit,miss,focus}`), still holding the v1 values; thread all existing materials (Building, World background/fog, flash colors) through it — pure refactor, zero visual change, tests stay green
+- [X] T004 [P] Export the `VANTAGES` table and add a `VIEW_ARC` constant (min/max azimuth, min/max polar per research R1) from `src/scene/index.ts` / `src/scene/World.ts` so tests can import both (no behavior change yet)
 
 **Checkpoint**: Refactor-only — deployed app looks identical; suite green.
 
