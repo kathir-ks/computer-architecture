@@ -12,7 +12,10 @@ test('Next advances the narration without overlap', async ({ page }) => {
   await page.goto('/?lowq');
   await expect(page.locator('#narration .para')).toHaveCount(1);
   const next = page.locator('#btn-next');
-  await next.click(); // fast-forwards the auto-played step
+  // Wait for the auto-played step to finish (button pulses when the engine is
+  // waiting) so the click deterministically starts step 2 — clicking mid-play
+  // fast-forwards instead, and how far auto-play got depends on machine speed.
+  await expect(next).toHaveClass(/pulsing/, { timeout: 30_000 });
   await next.click(); // starts step 2
   await expect(page.locator('#narration .para')).toHaveCount(2);
   // Previous paragraph dims.
