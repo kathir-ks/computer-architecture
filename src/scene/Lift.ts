@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { anchorFor, floorBaseY, FLOOR_H, FLOORS, LIFT_X } from './Building';
+import { anchorFor, floorBaseY, FLOOR_H, FLOORS, LIFT_X, LIFT_Z } from './Building';
 import { locationOf, type LocationId } from './locations';
 import { liftDuration } from './timing';
 import type { Pulses, PulseId } from './effects/Pulse';
@@ -12,14 +12,30 @@ export class Lift {
   readonly clickTargets: THREE.Mesh[] = [];
 
   constructor(scene: THREE.Scene, private pulses: Pulses) {
-    // Shaft outline
-    const shaftGeo = new THREE.BoxGeometry(2, FLOORS * FLOOR_H, 2);
-    const shaft = new THREE.LineSegments(
-      new THREE.EdgesGeometry(shaftGeo),
-      new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.5 }),
+    // Glass tube on the building's open face: one convex transparent shell.
+    // depthWrite off so the car/pulse inside never get sorting artifacts.
+    const tubeGeo = new THREE.CylinderGeometry(1.35, 1.35, FLOORS * FLOOR_H, 12, 1, true);
+    const tube = new THREE.Mesh(
+      tubeGeo,
+      new THREE.MeshStandardMaterial({
+        color: 0xbfd8e8,
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
     );
-    shaft.position.set(LIFT_X, (FLOORS * FLOOR_H) / 2, 0);
-    this.group.add(shaft);
+    tube.position.set(LIFT_X, (FLOORS * FLOOR_H) / 2, LIFT_Z);
+    this.group.add(tube);
+
+    // Edge rails so the tube reads at a glance even where glass is invisible.
+    const railGeo = new THREE.CylinderGeometry(0.05, 0.05, FLOORS * FLOOR_H, 6);
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.35 });
+    for (const a of [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4]) {
+      const rail = new THREE.Mesh(railGeo, railMat);
+      rail.position.set(LIFT_X + Math.sin(a) * 1.35, (FLOORS * FLOOR_H) / 2, LIFT_Z + Math.cos(a) * 1.35);
+      this.group.add(rail);
+    }
 
     // Car
     const carMat = new THREE.MeshStandardMaterial({
@@ -30,11 +46,16 @@ export class Lift {
       opacity: 0.85,
     });
     this.car = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.1, 1.7), carMat);
-    this.car.position.set(LIFT_X, floorBaseY(10) + 1.05, 0);
+    this.car.position.set(LIFT_X, floorBaseY(10) + 1.05, LIFT_Z);
     this.group.add(this.car);
     this.clickTargets.push(this.car);
 
     scene.add(this.group);
+  }
+
+  /** The mesh the follow verb tracks during carries. */
+  get carMesh(): THREE.Mesh {
+    return this.car;
   }
 
   setGlow(on: boolean): void {
@@ -64,8 +85,8 @@ export class Lift {
 
     // Car comes to the pulse's floor if it isn't there.
     tl.to(this.car.position, { y: fromY, duration: 0.5, overwrite: 'auto' });
-    // Pulse slides into the shaft.
-    tl.to(mesh.position, { x: LIFT_X, z: 0, y: fromY, duration: 0.45, ease: 'power2.inOut' });
+    // Pulse slides into the tube.
+    tl.to(mesh.position, { x: LIFT_X, z: LIFT_Z, y: fromY, duration: 0.45, ease: 'power2.inOut' });
     // Ride together.
     tl.to(this.car.position, { y: toY, duration: ride, ease: 'power1.inOut' });
     tl.to(mesh.position, { y: toY, duration: ride, ease: 'power1.inOut' }, '<');

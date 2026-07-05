@@ -29,12 +29,12 @@
 
 **Independent Test**: Play all 8 chapters dragging the camera freely — the animating element is never hidden; `?dev` click-through confirms every clickable still responds (quickstart US1 section).
 
-- [ ] T005 [US1] Apply `VIEW_ARC` clamps to OrbitControls in `src/scene/World.ts` (`minAzimuthAngle`/`maxAzimuthAngle` ≈ ∓80° from +z, `minPolarAngle` ≈ 0.15π, keep `maxPolarAngle` 0.52π, damping on) per research R2
-- [ ] T006 [P] [US1] New unit test in `tests/unit/camera-arc.test.ts`: every `VANTAGES` entry's camera position lies inside `VIEW_ARC` relative to its target (pure spherical math, no renderer)
-- [ ] T007 [US1] Rework tower interiors in `src/scene/Building.ts`: delete the dark per-floor filler blocks; dress floors 1–3/5–7 as simple open rooms (desks/crates/plants from primitives, `PALETTE.emptyFloor`); inset side walls so arc-edge angles don't clip interiors; keep all `HighlightId` rooms, `anchorFor` anchors, and click registration byte-compatible (FR-004)
-- [ ] T008 [US1] Move the lift to a front-face glass tube in `src/scene/Lift.ts`: shaft at z ≈ `+BLD_D/2 − 0.6` as transparent shell (`opacity ~0.15`, `depthWrite: false`) + edge lines; update `LIFT_X`-based positions and `anchorFor('lift')` in `src/scene/Building.ts` consistently; `carry()` three-phase choreography and `liftDuration` unchanged; car stays the click target
-- [ ] T009 [US1] Retune `VANTAGES` coordinates in `src/scene/index.ts` for the open face (same nine `VantageId` names) so every default view frames dressed rooms; confirm T006 test passes with the new numbers
-- [ ] T010 [US1] Validate: run quickstart "US1 — Cutaway & viewing arc" checklist manually (`?dev` click-through of every clickable, full-arc drag during a lift carry); `npm run test` + `npm run build` green
+- [X] T005 [US1] Apply `VIEW_ARC` clamps to OrbitControls in `src/scene/World.ts` (`minAzimuthAngle`/`maxAzimuthAngle` ≈ ∓80° from +z, `minPolarAngle` ≈ 0.15π, keep `maxPolarAngle` 0.52π, damping on) per research R2
+- [X] T006 [P] [US1] New unit test in `tests/unit/camera-arc.test.ts`: every `VANTAGES` entry's camera position lies inside `VIEW_ARC` relative to its target (pure spherical math, no renderer)
+- [X] T007 [US1] Rework tower interiors in `src/scene/Building.ts`: delete the dark per-floor filler blocks; dress floors 1–3/5–7 as simple open rooms (desks/crates/plants from primitives, `PALETTE.emptyFloor`); inset side walls so arc-edge angles don't clip interiors; keep all `HighlightId` rooms, `anchorFor` anchors, and click registration byte-compatible (FR-004)
+- [X] T008 [US1] Move the lift to a front-face glass tube in `src/scene/Lift.ts`: shaft at z ≈ `+BLD_D/2 − 0.6` as transparent shell (`opacity ~0.15`, `depthWrite: false`) + edge lines; update `LIFT_X`-based positions and `anchorFor('lift')` in `src/scene/Building.ts` consistently; `carry()` three-phase choreography and `liftDuration` unchanged; car stays the click target
+- [X] T009 [US1] Retune `VANTAGES` coordinates in `src/scene/index.ts` for the open face (same nine `VantageId` names) so every default view frames dressed rooms; confirm T006 test passes with the new numbers
+- [X] T010 [US1] Validate: run quickstart "US1 — Cutaway & viewing arc" checklist manually (`?dev` click-through of every clickable, full-arc drag during a lift carry); `npm run test` + `npm run build` green
 
 **Checkpoint (M1)**: Deployable — cutaway with v1 colors is a complete visibility upgrade on its own.
 

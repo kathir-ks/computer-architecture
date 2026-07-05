@@ -11,6 +11,9 @@ export const FLOORS = 10;
 export const BLD_W = 14; // x
 export const BLD_D = 9; // z (front face +z is open — the cutaway)
 export const LIFT_X = -BLD_W / 2 + 1.6;
+// Lift rides in a glass tube on the open (+z) face so every carry is visible
+// for the whole trip from anywhere in the viewing arc (FR-003).
+export const LIFT_Z = BLD_D / 2 - 0.6;
 export const WAREHOUSE_POS = new THREE.Vector3(-26, 0, 8);
 
 export function floorBaseY(floor: number): number {
@@ -40,7 +43,7 @@ export function anchorFor(id: HighlightId): THREE.Vector3 {
     case 'courier':
       return WAREHOUSE_POS.clone().add(new THREE.Vector3(0, 1.6, 0));
     case 'lift':
-      return new THREE.Vector3(LIFT_X, floorCenterY(1), 0);
+      return new THREE.Vector3(LIFT_X, floorCenterY(1), LIFT_Z);
   }
 }
 
@@ -152,20 +155,19 @@ export class Building {
     back.position.set(0, (FLOORS * FLOOR_H) / 2, -BLD_D / 2);
     this.group.add(back);
 
-    const sideGeo = new THREE.BoxGeometry(0.25, FLOORS * FLOOR_H, BLD_D);
+    // Side walls cover only the back half — at arc-edge azimuths (±80°) a
+    // full-depth side wall would occlude the room interiors (cutaway, FR-001).
+    const sideGeo = new THREE.BoxGeometry(0.25, FLOORS * FLOOR_H, BLD_D / 2);
     for (const sx of [-BLD_W / 2, BLD_W / 2]) {
       const side = new THREE.Mesh(sideGeo, wallMat);
-      side.position.set(sx, (FLOORS * FLOOR_H) / 2, 0);
+      side.position.set(sx, (FLOORS * FLOOR_H) / 2, -BLD_D / 4);
       this.group.add(side);
     }
 
-    // Dim boxes suggesting unused dark floors (1-3, 5-7).
-    const darkMat = new THREE.MeshStandardMaterial({ color: PALETTE.emptyFloor });
-    for (const f of [1, 2, 3, 5, 6, 7]) {
-      const filler = new THREE.Mesh(new THREE.BoxGeometry(BLD_W - 4.5, FLOOR_H - 1.2, BLD_D - 3), darkMat);
-      filler.position.set(0.8, floorCenterY(f), -0.6);
-      this.group.add(filler);
-    }
+    // Ordinary offices on the unused floors (1-3, 5-7) — open dollhouse rooms
+    // instead of the old dark filler blocks. Set dressing only: not clickable,
+    // not highlightable, deterministic layout varied by floor number.
+    for (const f of [1, 2, 3, 5, 6, 7]) this.dressEmptyFloor(f);
 
     // Neon edge outline of the tower.
     const outlineGeo = new THREE.EdgesGeometry(
@@ -185,6 +187,34 @@ export class Building {
     const sign = new CSS2DObject(signEl);
     sign.position.set(0, FLOORS * FLOOR_H + 1.6, 0);
     this.group.add(sign);
+  }
+
+  /** Simple office dressing for a non-teaching floor: desks, a cabinet, a plant. */
+  private dressEmptyFloor(f: number): void {
+    const y = floorBaseY(f);
+    const deskMat = new THREE.MeshStandardMaterial({ color: PALETTE.emptyFloor, emissive: PALETTE.emptyFloor, emissiveIntensity: 0.08 });
+    const mirror = f % 2 === 0 ? 1 : -1; // alternate layouts so floors don't clone
+
+    // Two desks (top + legs suggested by a single slab on a block).
+    for (const dx of [-3.4, 1.8]) {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 1.1), deskMat);
+      top.position.set(dx * mirror + 0.6, y + 0.85, -1.2);
+      const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.75, 0.9), deskMat);
+      base.position.set(dx * mirror + 0.6, y + 0.42, -1.2);
+      this.group.add(top, base);
+    }
+
+    // Filing cabinet against the back wall.
+    const cabinet = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.8, 0.7), deskMat);
+    cabinet.position.set(4.6 * mirror, y + 0.9, -BLD_D / 2 + 0.7);
+    this.group.add(cabinet);
+
+    // Potted plant near the open face.
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.4, 8), deskMat);
+    pot.position.set(-4.8 * mirror, y + 0.2, 1.6);
+    const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 0), deskMat);
+    leaves.position.set(-4.8 * mirror, y + 0.9, 1.6);
+    this.group.add(pot, leaves);
   }
 
   private buildRoom(

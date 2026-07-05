@@ -60,7 +60,12 @@ export class World {
     this.controls.dampingFactor = 0.08;
     this.controls.maxDistance = 90;
     this.controls.minDistance = 4;
-    this.controls.maxPolarAngle = Math.PI * 0.52;
+    // Cutaway viewing arc: the user physically cannot orbit to an angle where
+    // walls or slabs hide the rooms (spec FR-002). Damping softens the stops.
+    this.controls.minAzimuthAngle = VIEW_ARC.minAzimuth;
+    this.controls.maxAzimuthAngle = VIEW_ARC.maxAzimuth;
+    this.controls.minPolarAngle = VIEW_ARC.minPolar;
+    this.controls.maxPolarAngle = VIEW_ARC.maxPolar;
     this.controls.target.set(0, 14, 0);
 
     // Lights: cool ambient night + warm key.
