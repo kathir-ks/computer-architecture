@@ -18,7 +18,9 @@ export class Neon {
     this.composer = new EffectComposer(world.renderer);
     this.composer.addPass(new RenderPass(world.scene, world.camera));
     const size = world.renderer.getSize(new THREE.Vector2());
-    this.composer.addPass(new UnrealBloomPass(size, 0.55, 0.6, 0.82));
+    // Daylight tuning: bloom is an accent for emissive actors (pulses, lift,
+    // glows) only — high threshold keeps pastel surfaces crisp (research R8).
+    this.composer.addPass(new UnrealBloomPass(size, 0.35, 0.5, 0.92));
     world.onResize((w, h) => this.composer.setSize(w, h));
     this.setQuality(true);
   }

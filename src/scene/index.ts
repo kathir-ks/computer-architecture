@@ -55,11 +55,14 @@ export const VANTAGES: Record<VantageId, { pos: [number, number, number]; target
   'recap-wide': { pos: [26, 22, 42], target: [-8, 12, 0] },
 };
 
-const MOODS: Record<Mood, { bg: number; fog: number }> = {
-  intro: { bg: 0x0a0e1a, fog: 0x0a0e1a },
-  working: { bg: 0x0c1222, fog: 0x0c1222 },
-  'tense-miss': { bg: 0x160d18, fog: 0x160d18 },
-  celebration: { bg: 0x0a1a1c, fog: 0x0a1a1c },
+// Daylight variants (FR-007): mood shifts stay within the pastel daytime look.
+// hemi tints the hemisphere light so the mood reaches the room interiors,
+// where a background-only change would be invisible.
+const MOODS: Record<Mood, { bg: number; hemi: number }> = {
+  intro: { bg: 0xf4e2c4, hemi: 0xffe2b3 }, // golden hour
+  working: { bg: 0xdfe9f3, hemi: 0xbfd9ff }, // neutral daylight
+  'tense-miss': { bg: 0xc9b3bd, hemi: 0xc79ab4 }, // overcast dusk, red-violet cast
+  celebration: { bg: 0xf6ecd2, hemi: 0xffe9c0 }, // warm bright
 };
 
 /** Concrete scene: builds the world and implements the verbs contract. */
@@ -211,8 +214,10 @@ export class Scene implements SceneVerbs {
     const bg = this.world.scene.background as THREE.Color;
     const fog = this.world.scene.fog as THREE.Fog;
     const target = new THREE.Color(m.bg);
+    const hemi = new THREE.Color(m.hemi);
     tl.to(bg, { r: target.r, g: target.g, b: target.b, duration: 1.2 });
     tl.to(fog.color, { r: target.r, g: target.g, b: target.b, duration: 1.2 }, '<');
+    tl.to(this.world.hemi.color, { r: hemi.r, g: hemi.g, b: hemi.b, duration: 1.2 }, '<');
     return tl;
   }
 }

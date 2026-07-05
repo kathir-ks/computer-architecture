@@ -24,6 +24,8 @@ export class World {
   readonly renderer: THREE.WebGLRenderer;
   readonly labelRenderer: CSS2DRenderer;
   readonly controls: OrbitControls;
+  /** Hemisphere light — setMood tints it so moods reach room interiors. */
+  readonly hemi: THREE.HemisphereLight;
 
   /** Optional composer-style render override (set by Neon when bloom is on). */
   renderOverride: (() => void) | null = null;
@@ -68,11 +70,17 @@ export class World {
     this.controls.maxPolarAngle = VIEW_ARC.maxPolar;
     this.controls.target.set(0, 14, 0);
 
-    // Lights: cool ambient night + warm key.
-    this.scene.add(new THREE.HemisphereLight(0x33415e, 0x0a0e1a, 0.9));
-    const key = new THREE.DirectionalLight(0xfff2dd, 1.1);
+    // Lights: soft daylight — sky/ground ambient, warm key, gentle front fill
+    // so the open cutaway rooms aren't in their own shadow. No shadow maps
+    // (constitution V: integrated-GPU budget).
+    this.hemi = new THREE.HemisphereLight(0xbfd9ff, 0xd8c9a8, 1.05);
+    this.scene.add(this.hemi);
+    const key = new THREE.DirectionalLight(0xfff2dd, 1.2);
     key.position.set(24, 40, 18);
     this.scene.add(key);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+    fill.position.set(-6, 18, 60);
+    this.scene.add(fill);
 
     // User grabbing the canvas must instantly win over scripted camera moves.
     this.renderer.domElement.addEventListener('pointerdown', () => {

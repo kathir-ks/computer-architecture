@@ -53,24 +53,24 @@ export function anchorFor(id: HighlightId): THREE.Vector3 {
  * signals must remain pairwise distinguishable against room surfaces.
  */
 export const PALETTE = {
-  desk: 0x1a2138, // floor 10 dressing
-  l1: 0x3b4c78, // floor 9 shelves
-  l2: 0x3b4c78, // floor 8 storeroom
-  ram: 0x35558a, // floor 4 archive
-  emptyFloor: 0x131a2e, // floors 1-3, 5-7
-  warehouse: 0x2e2a45,
+  desk: 0xf3dfb5, // floor 10 — warm cream
+  l1: 0xa8e0bd, // floor 9 shelves — mint
+  l2: 0x8fd1cb, // floor 8 storeroom — soft teal
+  ram: 0xaab8ec, // floor 4 archive — lavender-blue
+  emptyFloor: 0xd9d2c6, // floors 1-3, 5-7 — neutral warm grey
+  warehouse: 0xd39b82, // muted terracotta
   structure: {
-    slab: 0x2a3350,
-    wall: 0x1a2138,
-    ground: 0x0e1424,
-    road: 0x181f33,
+    slab: 0xe9e4da,
+    wall: 0xccd5dd,
+    ground: 0xaec9a4, // soft sage lawn
+    road: 0x9aa5b1,
   },
-  sky: 0x0a0e1a, // World background + fog
-  accent: 0x00e5ff, // edge lines, focus glow
+  sky: 0xdfe9f3, // World background + fog — warm light blue
+  accent: 0x0e7c9c, // edge lines, lift rails — deep teal reads on daylight
   signals: {
-    hit: 0x2affb0,
-    miss: 0xff4060,
-    focus: 0x00e5ff,
+    hit: 0x0faf6e, // dark green — the three must stay distinct on pastel (FR-008)
+    miss: 0xe02f4f, // red
+    focus: 0x1a6ff0, // blue
   },
 };
 

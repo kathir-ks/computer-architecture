@@ -44,11 +44,11 @@
 
 **Independent Test**: Quickstart "US2 — Pastel daylight style" checklist: distinct hues per floor group, vivid actors, three distinguishable flash colors, all four moods read as daylight.
 
-- [ ] T011 [US2] Fill `PALETTE` with the pastel values (data-model FloorPalette hue families) in `src/scene/Building.ts` and apply to ground/road/warehouse; swap `World.ts` background/fog to the sky tone and retune lights (hemisphere sky/warm higher intensity, key ~1.2, add soft front fill; no shadow maps) per research R4
-- [ ] T012 [P] [US2] Retint actors for saturation-against-pastel: `src/scene/Worker.ts`, `src/scene/Courier.ts`, `src/scene/effects/Pulse.ts`, lift car in `src/scene/Lift.ts` (FR-006)
-- [ ] T013 [US2] Re-tune `MOODS` in `src/scene/index.ts` as daylight variants and extend `setMood` to also tween the hemisphere light color (research R5; same keys/signature/duration)
-- [ ] T014 [US2] Update signal colors (`PALETTE.signals`, used by `flash` in `src/scene/Building.ts`) to the dark-on-pastel triplet and retune bloom in `src/scene/effects/Neon.ts` (strength ~0.35, higher threshold; toggle/watchdog logic untouched) per research R8
-- [ ] T015 [US2] Validate: quickstart US2 checklist incl. `?lowq` (bloom off must still look right); `npm run test` green
+- [X] T011 [US2] Fill `PALETTE` with the pastel values (data-model FloorPalette hue families) in `src/scene/Building.ts` and apply to ground/road/warehouse; swap `World.ts` background/fog to the sky tone and retune lights (hemisphere sky/warm higher intensity, key ~1.2, add soft front fill; no shadow maps) per research R4
+- [X] T012 [P] [US2] Retint actors for saturation-against-pastel: `src/scene/Worker.ts`, `src/scene/Courier.ts`, `src/scene/effects/Pulse.ts`, lift car in `src/scene/Lift.ts` (FR-006)
+- [X] T013 [US2] Re-tune `MOODS` in `src/scene/index.ts` as daylight variants and extend `setMood` to also tween the hemisphere light color (research R5; same keys/signature/duration)
+- [X] T014 [US2] Update signal colors (`PALETTE.signals`, used by `flash` in `src/scene/Building.ts`) to the dark-on-pastel triplet and retune bloom in `src/scene/effects/Neon.ts` (strength ~0.35, higher threshold; toggle/watchdog logic untouched) per research R8
+- [X] T015 [US2] Validate: quickstart US2 checklist incl. `?lowq` (bloom off must still look right); `npm run test` green
 
 **Checkpoint (M2)**: Deployable — full daylight restyle on top of the cutaway.
 

@@ -5,7 +5,7 @@ export type PulseTint = 'data' | 'instruction';
 
 const TINTS: Record<PulseTint, number> = {
   data: 0xff2ea6,
-  instruction: 0x00e5ff,
+  instruction: 0x00a8d6,
 };
 
 /** Glowing data pulses that travel through the world. */

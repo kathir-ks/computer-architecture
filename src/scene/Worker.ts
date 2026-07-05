@@ -47,8 +47,8 @@ export class Worker {
 
     // Register drawers (front of desk)
     const drawerMat = new THREE.MeshStandardMaterial({
-      color: 0x2affb0,
-      emissive: 0x2affb0,
+      color: 0x00a86b,
+      emissive: 0x00a86b,
       emissiveIntensity: 0.25,
     });
     const mkDrawer = (x: number) => {
@@ -102,8 +102,8 @@ export class Worker {
 
     // Instruction card (appears during fetch/decode)
     const cardMat = new THREE.MeshStandardMaterial({
-      color: 0x00e5ff,
-      emissive: 0x00e5ff,
+      color: 0x00a8d6,
+      emissive: 0x00a8d6,
       emissiveIntensity: 0.5,
       side: THREE.DoubleSide,
     });

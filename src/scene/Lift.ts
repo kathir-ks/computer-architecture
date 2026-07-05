@@ -30,7 +30,7 @@ export class Lift {
 
     // Edge rails so the tube reads at a glance even where glass is invisible.
     const railGeo = new THREE.CylinderGeometry(0.05, 0.05, FLOORS * FLOOR_H, 6);
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.35 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x0e7c9c, emissive: 0x0e7c9c, emissiveIntensity: 0.35 });
     for (const a of [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4]) {
       const rail = new THREE.Mesh(railGeo, railMat);
       rail.position.set(LIFT_X + Math.sin(a) * 1.35, (FLOORS * FLOOR_H) / 2, LIFT_Z + Math.cos(a) * 1.35);
@@ -39,8 +39,8 @@ export class Lift {
 
     // Car
     const carMat = new THREE.MeshStandardMaterial({
-      color: 0x123,
-      emissive: 0x00e5ff,
+      color: 0x9adfef,
+      emissive: 0x0e7c9c,
       emissiveIntensity: 0.4,
       transparent: true,
       opacity: 0.85,

@@ -14,8 +14,8 @@ export class Courier {
   constructor(scene: THREE.Scene, private pulses: Pulses) {
     this.van = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x7a62d1,
-      emissive: 0x7a62d1,
+      color: 0x6c4fe0,
+      emissive: 0x6c4fe0,
       emissiveIntensity: 0.25,
     });
     const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 1.2), bodyMat);
