@@ -60,7 +60,9 @@ in `tests/unit/story-engine.test.ts`).
 - Headless Chromium renders WebGL on a software rasterizer — bloom makes it crawl.
   Smoke tests that interact must use `?lowq`.
 - npm on Windows sometimes drops `@rollup/rollup-win32-x64-msvc` (optional-deps bug);
-  reinstall it directly if rollup fails with MODULE_NOT_FOUND.
+  if rollup fails with MODULE_NOT_FOUND, delete `node_modules` and reinstall — do NOT
+  add the package to `package.json` directly, since that forces it as a mandatory dep
+  on every platform and breaks `npm ci` on Linux CI runners (EBADPLATFORM).
 
 ## Spec-driven workflow
 
