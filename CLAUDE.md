@@ -59,10 +59,12 @@ in `tests/unit/story-engine.test.ts`).
   starting past chapter 1.
 - Headless Chromium renders WebGL on a software rasterizer — bloom makes it crawl.
   Smoke tests that interact must use `?lowq`.
-- npm on Windows sometimes drops `@rollup/rollup-win32-x64-msvc` (optional-deps bug);
-  if rollup fails with MODULE_NOT_FOUND, delete `node_modules` and reinstall — do NOT
-  add the package to `package.json` directly, since that forces it as a mandatory dep
-  on every platform and breaks `npm ci` on Linux CI runners (EBADPLATFORM).
+- If rollup/rolldown fails with MODULE_NOT_FOUND on a `*-win32-x64-msvc` binding,
+  first check `npm config get os` — an `os=linux` line in `~/.npmrc` was the real
+  cause on this machine (makes npm skip all win32 optional packages); remove it, then
+  delete `node_modules` + `package-lock.json` and reinstall. Do NOT add the binding
+  package to `package.json` directly — that forces it as a mandatory dep on every
+  platform and breaks `npm ci` on Linux CI runners (EBADPLATFORM).
 - Camera verbs (`flyTo`, `follow`) share one `CameraSlot` — creating either kills the
   previous owner *at cue build time*. That's safe: GSAP's `add()` revives a killed
   child timeline (verified empirically), which is also why v1's chained flyTos worked.
