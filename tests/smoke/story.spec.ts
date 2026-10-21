@@ -40,3 +40,81 @@ test('pause control appears during playback', async ({ page }) => {
     await expect(next).toHaveClass(/pulsing/);
   }
 });
+
+test('camera modes switch freely; dragging takes the camera and Resume hands it back', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  await page.goto('/?lowq&debug');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  const mode = () => page.evaluate(() => (window as unknown as { __cpu: { view(): { cameraMode: string } } }).__cpu.view().cameraMode);
+  expect(await mode()).toBe('cinematic');
+
+  for (const [label, expected] of [
+    ['Free', 'free'],
+    ['Follow', 'follow'],
+    ['Cinematic', 'cinematic'],
+  ] as const) {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    expect(await mode()).toBe(expected);
+  }
+
+  // Learner drags the view: scripted camera stops and Resume appears (directed modes only).
+  const box = (await page.locator('#canvas-host canvas').boundingBox())!;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx + 80, cy + 20);
+  await page.mouse.up();
+  const resume = page.getByRole('button', { name: /Resume camera/ });
+  await expect(resume).toBeVisible();
+  await resume.click();
+  await expect(resume).toBeHidden();
+
+  expect(errors).toEqual([]);
+});
+
+test('Worker view: enter, look around, leave with Esc and the previous camera mode returns', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  await page.goto('/?lowq&debug&cam=follow');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  const view = () =>
+    page.evaluate(
+      () => (window as unknown as { __cpu: { view(): { cameraMode: string; workerView: boolean } } }).__cpu.view(),
+    );
+  expect(await view()).toMatchObject({ cameraMode: 'follow', workerView: false });
+
+  await page.getByRole('button', { name: /Worker view/ }).click();
+  expect(await view()).toMatchObject({ workerView: true });
+  await expect(page.getByText(/arrow keys to look around/)).toBeVisible();
+
+  // Looking around (drag) must not count as taking the camera, so Resume stays hidden.
+  const box = (await page.locator('#canvas-host canvas').boundingBox())!;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx + 120, cy - 30);
+  await page.mouse.up();
+  await expect(page.getByRole('button', { name: /Resume camera/ })).toBeHidden();
+
+  await page.keyboard.press('Escape');
+  expect(await view()).toMatchObject({ cameraMode: 'follow', workerView: false });
+
+  // The seat works at every quality tier too.
+  await page.getByRole('button', { name: /Worker view/ }).click();
+  await page.getByRole('button', { name: /Quality/ }).click();
+  await page.getByRole('button', { name: /Exit Worker view/ }).click();
+  expect(await view()).toMatchObject({ workerView: false });
+
+  expect(errors).toEqual([]);
+});

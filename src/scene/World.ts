@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const ENV_ON = 0.45;
+const HEMI_ENV_ON = 1.1;
+const HEMI_ENV_OFF = 1.7;
+/** Keys OrbitControls moves the camera with; pressing one counts as the learner taking control. */
+const CAMERA_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 
 /**
  * Owns renderer, camera, orbit controls, label overlay and the render loop.
@@ -12,6 +19,10 @@ export class World {
   readonly renderer: THREE.WebGLRenderer;
   readonly labelRenderer: CSS2DRenderer;
   readonly controls: OrbitControls;
+  readonly keyLight: THREE.DirectionalLight;
+  private hemi: THREE.HemisphereLight;
+  private pmrem: THREE.PMREMGenerator;
+  private envTexture: THREE.Texture;
 
   /** Optional composer-style render override (set by Neon when bloom is on). */
   renderOverride: (() => void) | null = null;
@@ -51,18 +62,78 @@ export class World {
     this.controls.maxPolarAngle = Math.PI * 0.52;
     this.controls.target.set(0, 14, 0);
 
-    // Lights: cool ambient night + warm key.
-    this.scene.add(new THREE.HemisphereLight(0x33415e, 0x0a0e1a, 0.9));
-    const key = new THREE.DirectionalLight(0xfff2dd, 1.1);
-    key.position.set(24, 40, 18);
-    this.scene.add(key);
+    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // User grabbing the canvas must instantly win over scripted camera moves.
-    this.renderer.domElement.addEventListener('pointerdown', () => {
+    // Image-based light from a procedural room — reflections and fill without any asset files.
+    this.pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.envTexture = this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environment = this.envTexture;
+    this.scene.environmentIntensity = ENV_ON;
+
+    // Lights: readable cool-blue night, warm key from the front-right, cool fill from the left.
+    this.hemi = new THREE.HemisphereLight(0x8fa6d8, 0x1d2540, HEMI_ENV_ON);
+    this.scene.add(this.hemi);
+    this.keyLight = new THREE.DirectionalLight(0xfff0dc, 1.5);
+    this.keyLight.position.set(24, 40, 18);
+    this.keyLight.target.position.set(0, 14, 0);
+    const sh = this.keyLight.shadow;
+    sh.mapSize.set(1024, 1024);
+    sh.camera.left = -34;
+    sh.camera.right = 34;
+    sh.camera.top = 34;
+    sh.camera.bottom = -34;
+    sh.camera.near = 5;
+    sh.camera.far = 110;
+    sh.bias = -0.0004;
+    sh.normalBias = 0.04;
+    this.scene.add(this.keyLight, this.keyLight.target);
+    const fill = new THREE.DirectionalLight(0x86a8ff, 0.55);
+    fill.position.set(-26, 18, 30);
+    this.scene.add(fill);
+
+    // Any learner input on the view must instantly win over scripted camera moves (FR-016):
+    // mouse/pen, wheel, touch, and the keys that orbit/pan/zoom.
+    const grab = () => {
       for (const cb of this.grabCallbacks) cb();
+    };
+    const el = this.renderer.domElement;
+    el.addEventListener('pointerdown', grab);
+    el.addEventListener('wheel', grab, { passive: true });
+    el.addEventListener('touchstart', grab, { passive: true });
+    this.controls.listenToKeyEvents(window);
+    window.addEventListener('keydown', (e) => {
+      if (!CAMERA_KEYS.has(e.key)) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      grab();
     });
 
     window.addEventListener('resize', () => this.resize(canvasHost));
+  }
+
+  /** Soft shadows from the key light (high tier only). Materials must recompile when this flips. */
+  setShadowsEnabled(on: boolean): void {
+    if (this.renderer.shadowMap.enabled === on) return;
+    this.renderer.shadowMap.enabled = on;
+    this.keyLight.castShadow = on;
+    this.refreshMaterials();
+  }
+
+  /** Procedural environment light. Without it the hemisphere light is lifted to keep the scene readable. */
+  setEnvEnabled(on: boolean): void {
+    this.scene.environment = on ? this.envTexture : null;
+    this.scene.environmentIntensity = on ? ENV_ON : 0;
+    this.hemi.intensity = on ? HEMI_ENV_ON : HEMI_ENV_OFF;
+    this.refreshMaterials();
+  }
+
+  private refreshMaterials(): void {
+    this.scene.traverse((o) => {
+      const mat = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      if (!mat) return;
+      for (const m of Array.isArray(mat) ? mat : [mat]) m.needsUpdate = true;
+    });
   }
 
   private resize(host: HTMLElement): void {
@@ -97,8 +168,9 @@ export class World {
   start(): void {
     this.renderer.setAnimationLoop(() => {
       const dt = this.clock.getDelta();
-      this.controls.update();
+      // Scripted camera first (rig), then OrbitControls applies learner damping on top.
       for (const cb of this.frameCallbacks) cb(dt);
+      this.controls.update();
 
       if (this.renderOverride) this.renderOverride();
       else this.renderer.render(this.scene, this.camera);

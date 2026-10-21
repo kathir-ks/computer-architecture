@@ -1,25 +1,23 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { World } from './World';
-import { anchorFor, Building } from './Building';
+import { anchorFor, Building, BLD_D, BLD_W, FLOORS, FLOOR_H } from './Building';
 import { Worker, type RegisterName, type WorkKind } from './Worker';
 import { Lift } from './Lift';
 import { Courier } from './Courier';
 import { Pulses, type PulseId, type PulseTint } from './effects/Pulse';
 import { Neon } from './effects/Neon';
+import { Trails } from './effects/Trails';
+import { Quality } from './effects/Quality';
+import { Materials } from './materials';
+import { ViewState, type CameraMode, type QualityTier, type ViewSnapshot } from './view/viewState';
+import { CameraRig } from './camera/CameraRig';
+import type { VantageId } from './camera/shots';
 import type { HighlightId, LocationId } from './locations';
 import { TIMING } from './timing';
+import { reducedMotion } from './motion';
 
-export type VantageId =
-  | 'street'
-  | 'building-front'
-  | 'floor10-desk'
-  | 'floor9-shelves'
-  | 'floor8-storeroom'
-  | 'floor4-archive'
-  | 'warehouse'
-  | 'lift-shaft'
-  | 'recap-wide';
+export type { VantageId } from './camera/shots';
 
 export type Mood = 'intro' | 'working' | 'tense-miss' | 'celebration';
 
@@ -43,18 +41,6 @@ export interface SceneVerbs {
   setMood(mood: Mood): gsap.core.Timeline;
 }
 
-const VANTAGES: Record<VantageId, { pos: [number, number, number]; target: [number, number, number] }> = {
-  street: { pos: [6, 3, 44], target: [0, 10, 0] },
-  'building-front': { pos: [20, 18, 32], target: [0, 14, 0] },
-  'floor10-desk': { pos: [9, 31, 11], target: [3.2, 28.8, 0] },
-  'floor9-shelves': { pos: [5, 27.5, 13], target: [0.2, 25.5, 0] },
-  'floor8-storeroom': { pos: [6, 24.5, 13], target: [0.5, 22.5, 0] },
-  'floor4-archive': { pos: [6, 12.5, 14], target: [0.5, 10.5, 0] },
-  warehouse: { pos: [-16, 9, 26], target: [-26, 2.5, 8] },
-  'lift-shaft': { pos: [-16, 17, 18], target: [-5.4, 15, 0] },
-  'recap-wide': { pos: [26, 22, 42], target: [-8, 12, 0] },
-};
-
 const MOODS: Record<Mood, { bg: number; fog: number }> = {
   intro: { bg: 0x0a0e1a, fog: 0x0a0e1a },
   working: { bg: 0x0c1222, fog: 0x0c1222 },
@@ -71,30 +57,110 @@ export class Scene implements SceneVerbs {
   readonly courier: Courier;
   readonly pulses: Pulses;
   readonly neon: Neon;
+  readonly materials: Materials;
+  readonly trails: Trails;
+  readonly quality: Quality;
+  readonly rig: CameraRig;
+  /** Learner-controlled view settings (quality, camera mode; X-ray and Worker view arrive later). */
+  readonly view: ViewState;
 
-  private activeCameraTl: gsap.core.Timeline | null = null;
-
-  constructor(canvasHost: HTMLElement, labelsHost: HTMLElement) {
+  constructor(
+    canvasHost: HTMLElement,
+    labelsHost: HTMLElement,
+    opts?: { quality?: QualityTier; cameraMode?: CameraMode },
+  ) {
     this.world = new World(canvasHost, labelsHost);
-    this.building = new Building(this.world);
-    this.pulses = new Pulses(this.world.scene);
-    this.worker = new Worker(this.world.scene);
-    this.lift = new Lift(this.world.scene, this.pulses);
-    this.courier = new Courier(this.world.scene, this.pulses);
+    this.materials = new Materials();
+    this.view = new ViewState({
+      quality: opts?.quality ?? 'high',
+      cameraMode: opts?.cameraMode ?? 'cinematic',
+    });
+    this.building = new Building(this.world, this.materials);
+    this.trails = new Trails(this.world.scene);
+    this.pulses = new Pulses(this.world.scene, this.trails);
+    this.worker = new Worker(this.world.scene, this.materials);
+    this.lift = new Lift(this.world.scene, this.pulses, this.materials);
+    this.courier = new Courier(this.world.scene, this.pulses, this.materials);
     this.neon = new Neon(this.world);
+
+    // Quality tiers drive bloom, shadows, environment light, trail length and glass detail.
+    this.quality = new Quality(this.view, {
+      setBloom: (on) => this.neon.setQuality(on),
+      setShadows: (on) => this.world.setShadowsEnabled(on),
+      setEnv: (on) => this.world.setEnvEnabled(on),
+      setTrailDetail: (d) => this.trails.setDetail(d),
+      setMaterialTier: (t) => {
+        this.materials.setTier(t);
+        this.building.setQualityTier(t);
+      },
+    });
+    this.world.onFps((fps) => this.quality.feedFps(fps));
+
+    // The rig owns the camera; story flyTo calls are shot requests it honours per the learner's mode.
+    this.rig = new CameraRig(
+      this.world.camera,
+      this.world.controls,
+      this.view,
+      {
+        minX: -BLD_W / 2,
+        maxX: BLD_W / 2,
+        minZ: -BLD_D / 2,
+        maxZ: BLD_D / 2,
+        topY: FLOORS * FLOOR_H,
+      },
+      {
+        eye: (out) => this.worker.eyePosition(out),
+        onFirstPerson: (on) => this.worker.setFirstPerson(on),
+      },
+    );
+    this.wireWorkerLook();
+
+    // Per-frame life: scripted camera, tumbling data blocks and fading trails.
+    this.world.onFrame((dt) => {
+      this.rig.update(dt);
+      this.pulses.update(dt);
+      this.trails.update(dt, this.world.camera);
+    });
 
     // Worker/lift/courier meshes participate in click-to-explain raycasting.
     for (const m of this.worker.clickTargets) this.building.addClickable(m, 'worker');
     for (const m of this.lift.clickTargets) this.building.addClickable(m, 'lift');
     for (const m of this.courier.clickTargets) this.building.addClickable(m, 'disk');
 
-    // User input instantly wins over scripted camera moves (FR-006).
-    this.world.onUserGrab(() => {
-      this.activeCameraTl?.kill();
-      this.activeCameraTl = null;
-    });
+    // User input instantly wins over scripted camera moves (FR-016).
+    this.world.onUserGrab(() => this.rig.userGrab());
 
     this.world.start();
+  }
+
+  /** Head-turning in Worker view: drag with pointer or touch, or use the arrow keys. */
+  private wireWorkerLook(): void {
+    const el = this.world.renderer.domElement;
+    let dragging = false;
+    el.addEventListener('pointerdown', (e) => {
+      if (!this.view.get().workerView) return;
+      dragging = true;
+      el.setPointerCapture?.(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (dragging) this.rig.lookDrag(e.movementX, e.movementY);
+    });
+    const stop = () => {
+      dragging = false;
+    };
+    el.addEventListener('pointerup', stop);
+    el.addEventListener('pointercancel', stop);
+    window.addEventListener('keydown', (e) => {
+      if (!this.view.get().workerView) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      const yaw = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      const pitch = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : 0;
+      if (yaw || pitch) {
+        e.preventDefault();
+        this.rig.lookKey(yaw, pitch);
+      }
+    });
   }
 
   /** Steady hover glow, routed to whichever module owns the element. */
@@ -122,31 +188,47 @@ export class Scene implements SceneVerbs {
     this.building.onElementClick(cb);
   }
 
+  // ---- view (learner controls; Worker view and X-ray arrive in later phases) ----
+
+  getView(): ViewSnapshot {
+    return this.view.get();
+  }
+
+  onView(cb: (v: ViewSnapshot) => void): () => void {
+    return this.view.subscribe(cb);
+  }
+
+  setQuality(tier: QualityTier): void {
+    this.view.setQuality(tier);
+  }
+
+  setCameraMode(mode: CameraMode): void {
+    this.view.setCameraMode(mode);
+  }
+
+  /** Sit at the Worker's desk and look around. */
+  enterWorkerView(): void {
+    this.view.enterWorkerView();
+  }
+
+  exitWorkerView(): void {
+    this.view.exitWorkerView();
+  }
+
+  /** Learner pressed "Resume camera". */
+  resumeCamera(): void {
+    this.rig.resume();
+  }
+
+  /** Story paused/resumed: scripted camera steering pauses with it. */
+  setAutomationPaused(paused: boolean): void {
+    this.rig.setPaused(paused);
+  }
+
   // ---- SceneVerbs implementation ----
 
   flyTo(target: VantageId, opts?: { duration?: number }): gsap.core.Timeline {
-    const v = VANTAGES[target];
-    const dur = opts?.duration ?? TIMING.flyTo;
-    const tl = gsap.timeline({
-      onComplete: () => {
-        if (this.activeCameraTl === tl) this.activeCameraTl = null;
-      },
-    });
-    tl.to(this.world.camera.position, {
-      x: v.pos[0],
-      y: v.pos[1],
-      z: v.pos[2],
-      duration: dur,
-      ease: 'power2.inOut',
-    });
-    tl.to(
-      this.world.controls.target,
-      { x: v.target[0], y: v.target[1], z: v.target[2], duration: dur, ease: 'power2.inOut' },
-      '<',
-    );
-    this.activeCameraTl?.kill();
-    this.activeCameraTl = tl;
-    return tl;
+    return this.rig.requestShot(target, opts?.duration ?? TIMING.flyTo);
   }
 
   reveal(id: LocationId): gsap.core.Timeline {
@@ -187,11 +269,29 @@ export class Scene implements SceneVerbs {
   }
 
   carry(pulse: PulseId, from: LocationId, to: LocationId): gsap.core.Timeline {
-    return this.lift.carry(pulse, from, to);
+    const tl = this.lift.carry(pulse, from, to);
+    const mesh = this.pulses.meshOf(pulse);
+    if (mesh) {
+      tl.call(() => this.rig.track(mesh), undefined, 0);
+      tl.call(() => this.rig.untrack(mesh));
+      // Launch wind-up: a quick squash-and-stretch while the car comes to the floor (adds no time).
+      if (!reducedMotion()) {
+        const w = TIMING.launchWindup;
+        const squash = gsap.timeline();
+        squash.to(mesh.scale, { x: 1.28, y: 0.72, z: 1.28, duration: w, ease: 'power2.out' });
+        squash.to(mesh.scale, { x: 1, y: 1, z: 1, duration: w * 1.8, ease: 'elastic.out(1, 0.45)' });
+        tl.add(squash, 0);
+      }
+    }
+    return tl;
   }
 
   courierTrip(pulse: PulseId, opts?: { fastForward?: boolean }): gsap.core.Timeline {
-    return this.courier.trip(pulse, opts);
+    const tl = this.courier.trip(pulse, opts);
+    const van = this.courier.vanObject;
+    tl.call(() => this.rig.track(van), undefined, 0);
+    tl.call(() => this.rig.untrack(van));
+    return tl;
   }
 
   deliver(pulse: PulseId, to: LocationId | 'worker'): gsap.core.Timeline {
@@ -200,8 +300,15 @@ export class Scene implements SceneVerbs {
     if (!mesh) return tl;
     const dest = anchorFor(to === 'worker' ? 'worker' : to);
     tl.to(mesh.position, { x: dest.x, y: dest.y, z: dest.z, duration: 0.5, ease: 'power2.in' });
+    // Arrival settle: a small squash on impact before it is absorbed.
+    if (!reducedMotion()) {
+      tl.to(mesh.scale, { x: 1.25, y: 0.78, z: 1.25, duration: TIMING.arriveSettle * 0.5, ease: 'power2.out' });
+    }
     tl.to(mesh.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 0.3 });
-    tl.call(() => this.pulses.dispose(pulse));
+    tl.call(() => {
+      this.rig.untrack(mesh);
+      this.pulses.dispose(pulse);
+    });
     return tl;
   }
 

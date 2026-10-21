@@ -83,5 +83,5 @@ deploy on every push to main/master.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/001-cpu-building-story/plan.md
+at specs/002-cpu-building-v2/plan.md
 <!-- SPECKIT END -->

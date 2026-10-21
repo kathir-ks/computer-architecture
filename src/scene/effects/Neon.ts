@@ -1,6 +1,7 @@
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as THREE from 'three';
 import type { World } from '../World';
 
@@ -19,6 +20,9 @@ export class Neon {
     this.composer.addPass(new RenderPass(world.scene, world.camera));
     const size = world.renderer.getSize(new THREE.Vector2());
     this.composer.addPass(new UnrealBloomPass(size, 0.55, 0.6, 0.82));
+    // The composer renders in linear HDR; without this pass the bloom path skips tone mapping
+    // and sRGB conversion and the whole scene comes out dark and flat.
+    this.composer.addPass(new OutputPass());
     world.onResize((w, h) => this.composer.setSize(w, h));
     this.setQuality(true);
   }
