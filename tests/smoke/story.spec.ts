@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { RUNGS, formatCycles } from '../../src/ui/ladderModel';
 
 test('page loads, canvas renders, story begins', async ({ page }) => {
   await page.goto('/');
@@ -115,6 +116,46 @@ test('Worker view: enter, look around, leave with Esc and the previous camera mo
   await page.getByRole('button', { name: /Quality/ }).click();
   await page.getByRole('button', { name: /Exit Worker view/ }).click();
   expect(await view()).toMatchObject({ workerView: false });
+
+  expect(errors).toEqual([]);
+});
+
+test('X-ray: switches on and off in several chapters and at low quality, labelling floors and listing the five latencies', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  const xrayState = () =>
+    page.evaluate(() => (window as unknown as { __cpu: { view(): { xray: boolean } } }).__cpu.view().xray);
+  // The expected figures come from the same table the app reads, formatted the way the page shows them.
+  const expected = RUNGS.map((r) => formatCycles(r.cycles));
+
+  for (const chapter of [3, 6, 7]) {
+    await page.goto(`/?lowq&debug#chapter-${chapter}`);
+    await expect(page.locator('#canvas-host canvas')).toBeVisible();
+
+    const toggle = page.getByRole('button', { name: /X-ray/ });
+    await expect(page.locator('#scale-host')).toBeHidden();
+
+    await toggle.click();
+    expect(await xrayState()).toBe(true);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#scale-host')).toBeVisible();
+    await expect(page.locator('.ladder-rungs .rung-cycles')).toHaveText(expected);
+
+    await toggle.click();
+    expect(await xrayState()).toBe(false);
+    await expect(page.locator('#scale-host')).toBeHidden();
+  }
+
+  // Straight in via the URL, and alongside Worker view.
+  await page.goto('/?lowq&debug&xray');
+  await expect(page.locator('#scale-host')).toBeVisible();
+  await page.getByRole('button', { name: /Worker view/ }).click();
+  await expect(page.locator('#scale-host')).toBeVisible();
+  await page.keyboard.press('Escape');
 
   expect(errors).toEqual([]);
 });

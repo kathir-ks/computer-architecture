@@ -9,6 +9,7 @@ import { FreePlayPanel } from './ui/FreePlayPanel';
 import { applyOutcome, emptyScoreboard, fire, type Op, type Target } from './story/freeplay';
 import { parseViewParams } from './urlParams';
 import { ViewDock, nextTier } from './ui/ViewDock';
+import { LevelLadder } from './ui/LevelLadder';
 import { mountStaticFallback } from './fallback/static-page';
 import gsap from 'gsap';
 
@@ -87,6 +88,18 @@ function mountDevHarness(scene: Scene): void {
   narration.appendChild(wrap);
 }
 
+/** The latency scale rides along with X-ray: shown while it is on, marked from the cycle ledger. */
+function mountScale(scene: Scene): void {
+  const host = document.getElementById('scale-host')!;
+  const ladder = new LevelLadder(host);
+  scene.onLedger((s) => ladder.update(s.current));
+  const sync = (xray: boolean) => {
+    host.hidden = !xray;
+  };
+  scene.onView((v) => sync(v.xray));
+  sync(scene.getView().xray);
+}
+
 function boot(): void {
   const params = parseViewParams(location.search);
   // ?nowebgl forces the fallback (manual testing per quickstart).
@@ -104,11 +117,17 @@ function boot(): void {
   );
   hideLoading();
   new ViewDock(document.getElementById('settings-chip')!, scene);
+  mountScale(scene);
+  if (params.xray) scene.setXray(true);
   if (params.worker) scene.enterWorkerView();
 
   // ?debug exposes state (and the scene, for inspection) to smoke tests and manual checks.
   if (params.debug) {
-    (window as unknown as { __cpu: unknown }).__cpu = { view: () => scene.getView(), scene };
+    (window as unknown as { __cpu: unknown }).__cpu = {
+      view: () => scene.getView(),
+      ledger: () => scene.getLedger(),
+      scene,
+    };
   }
 
   if (params.dev) {
@@ -180,6 +199,7 @@ function wireStory(scene: Scene): void {
   // Hash navigation mid-session: reset the book and start the target chapter.
   engine.onJump(() => {
     scene.resumeCamera(); // a new chapter hands the camera back to the story
+    scene.resetTelemetry(); // the old timelines were killed mid-flight; their journeys never finish
     panel.clear();
     document.getElementById('panel-controls')!.style.display = '';
     document.getElementById('freeplay')?.setAttribute('hidden', '');
@@ -201,6 +221,7 @@ function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine):
   let board = emptyScoreboard();
 
   engine.onFreeplayUnlock(() => {
+    scene.resetTelemetry(); // free play counts from zero, in step with its scoreboard
     document.getElementById('panel-controls')!.style.display = 'none';
     panel.showTiming(['registers', 'l1d', 'l2', 'ram', 'disk']);
     fp.show();
@@ -208,6 +229,7 @@ function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine):
   });
 
   fp.onReset(() => {
+    scene.resetTelemetry();
     board = emptyScoreboard();
     fp.updateScoreboard(board);
   });

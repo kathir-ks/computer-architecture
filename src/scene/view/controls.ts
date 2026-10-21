@@ -1,11 +1,11 @@
 import type { CameraMode, QualityTier, ViewSnapshot } from './viewState';
+import type { AccessJourney, LedgerSnapshot } from '../telemetry/ledger';
 
-export type { CameraMode, QualityTier, ViewSnapshot };
+export type { CameraMode, QualityTier, ViewSnapshot, AccessJourney, LedgerSnapshot };
 
 /**
  * Learner controls (contracts/view-controls.md). Deliberately NOT part of SceneVerbs:
  * only main.ts and src/ui/* receive this, so chapters cannot flip the learner's view.
- * The telemetry half (onLedger / resetTelemetry) is added with the ledger in Phase 7.
  */
 export interface ViewControls {
   getView(): ViewSnapshot;
@@ -21,4 +21,11 @@ export interface ViewControls {
   setXray(on: boolean): void;
   /** Manual change; the automatic step-down uses the same path. */
   setQuality(tier: QualityTier): void;
+
+  // ---- telemetry (read-only for the UI; values obey the invariants in data-model.md) ----
+
+  /** Called whenever the cycle book changes. Returns an unsubscribe function. */
+  onLedger(cb: (s: LedgerSnapshot) => void): () => void;
+  /** Chapter jump / free-play reset: timelines were killed, so partial journeys are dropped. */
+  resetTelemetry(): void;
 }

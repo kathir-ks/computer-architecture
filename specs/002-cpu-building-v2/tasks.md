@@ -140,14 +140,14 @@
 
 **Purpose**: One cycle ledger and one scene-side tracker feed the scale marker, ladder, meter, idle counter and free-play consistency. No UI here.
 
-- [ ] T053 [P] Add `WORK_CYCLES` (`compute: 1`, `'read-card': 1`) to `src/scene/locations.ts` and a test in `tests/unit/locations.test.ts` (latency numbers stay in this file only)
-- [ ] T054 [P] Create `src/scene/telemetry/ledger.ts`: `AccessJourney`, `LedgerSnapshot`, `CycleLedger` (`beginAccess`, `probe`, `serve`, `advance`, `complete`, `work`, `reset`, `subscribe`) with the six invariants from data-model.md
-- [ ] T055 Unit test `tests/unit/ledger.test.ts`: final cycles equal `locationOf(served).latencyCycles` for L1/L2/RAM/disk; `idle + working === elapsed` at every step; no double count after `complete`; probe de-duplication; idle increases only in open non-register journeys; totals equal `freeplay.applyOutcome` for the same fired sequence
-- [ ] T056 Create `src/scene/telemetry/tracker.ts`: `AccessTracker` deriving journeys from scene verbs per research D11 (`flash` miss/hit on memory levels → `probe`, `focus` ignored; `carry`/`courierTrip` → `serve` + meter tween using the verb's own duration and tween-delta `advance`; STORE direction; `deliver` → `complete`; `workerWork('compute'|'read-card')` → `work`)
-- [ ] T057 Unit test `tests/unit/access-tracker.test.ts`: replay the real verb sequences of chapters 5, 6 and 7 plus free-play LOAD/STORE flows against a recorder with real gsap timelines (`progress(1)` fast-forward and mid-way kill + `resetTelemetry`); assert ladder order, final meter, idle accounting
-- [ ] T058 Integrate the tracker into `flash`, `carry`, `courierTrip`, `deliver`, `workerWork` in `src/scene/index.ts` without changing their signatures; implement `onLedger` and `resetTelemetry` there
-- [ ] T059 Extend `src/scene/view/controls.ts` with the telemetry half (`onLedger`, `resetTelemetry`, `LedgerSnapshot`) per contracts/view-controls.md
-- [ ] T060 Update `src/main.ts`: call `scene.resetTelemetry()` on `engine.onJump` and on free-play reset; expose the ledger snapshot on `window.__cpu` under `?debug`
+- [X] T053 [P] Add `WORK_CYCLES` (`compute: 1`, `'read-card': 1`) to `src/scene/locations.ts` and a test in `tests/unit/locations.test.ts` (latency numbers stay in this file only)
+- [X] T054 [P] Create `src/scene/telemetry/ledger.ts`: `AccessJourney`, `LedgerSnapshot`, `CycleLedger` (`beginAccess`, `probe`, `serve`, `advance`, `complete`, `work`, `reset`, `subscribe`) with the six invariants from data-model.md
+- [X] T055 Unit test `tests/unit/ledger.test.ts`: final cycles equal `locationOf(served).latencyCycles` for L1/L2/RAM/disk; `idle + working === elapsed` at every step; no double count after `complete`; probe de-duplication; idle increases only in open non-register journeys; totals equal `freeplay.applyOutcome` for the same fired sequence
+- [X] T056 Create `src/scene/telemetry/tracker.ts`: `AccessTracker` deriving journeys from scene verbs per research D11 (`flash` miss/hit on memory levels → `probe`, `focus` ignored; `carry`/`courierTrip` → `serve` + meter tween using the verb's own duration and tween-delta `advance`; STORE direction; `deliver` → `complete`; `workerWork('compute'|'read-card')` → `work`)
+- [X] T057 Unit test `tests/unit/access-tracker.test.ts`: replay the real verb sequences of chapters 5, 6 and 7 plus free-play LOAD/STORE flows against a recorder with real gsap timelines (`progress(1)` fast-forward and mid-way kill + `resetTelemetry`); assert ladder order, final meter, idle accounting
+- [X] T058 Integrate the tracker into `flash`, `carry`, `courierTrip`, `deliver`, `workerWork` in `src/scene/index.ts` without changing their signatures; implement `onLedger` and `resetTelemetry` there
+- [X] T059 Extend `src/scene/view/controls.ts` with the telemetry half (`onLedger`, `resetTelemetry`, `LedgerSnapshot`) per contracts/view-controls.md
+- [X] T060 Update `src/main.ts`: call `scene.resetTelemetry()` on `engine.onJump` and on free-play reset; expose the ledger snapshot on `window.__cpu` under `?debug`
 
 **Checkpoint**: `window.__cpu` ledger values are correct for chapters 5–7 and free play (still no UI).
 
@@ -159,13 +159,13 @@
 
 **Independent test**: Toggle X-ray in each chapter: walls fade, ten role labels appear, scale shows exactly 0 / 4 / 12 / 200 / 4,000,000 and marks the active level; off restores smoothly (quickstart M2 item 1).
 
-- [ ] T061 [P] [US4] Create `src/scene/effects/Xray.ts`: fade registry for decor materials (outer walls, filler boxes, window panes, slab edges, dark-floor props), `setXray(on)` GSAP fade to ~0.12 opacity with edges/outline kept, floor-role label (CSS2D) reveal for all 10 floors; works at the `low` tier; never restarts other timelines
-- [ ] T062 [US4] Register decor materials with `Xray` in `src/scene/Building.ts` and add the 10 floor-role CSS2D labels (floor numbers + role names such as "Worker + registers", "L1 caches", "L2", "RAM archive", "lobby")
-- [ ] T063 [US4] Implement `setXray` in `src/scene/index.ts` (backed by `ViewState`) and honour `?xray` at boot in `src/main.ts`
-- [ ] T064 [P] [US4] Create `src/ui/LevelLadder.ts` with the **scale** layout: vertical rungs for registers/L1/L2/RAM/disk reading `LOCATIONS` from `src/scene/locations.ts` (no duplicated numbers), number formatting, active marker API driven by `onLedger` (`ledger.current.served`)
-- [ ] T065 [US4] Add X-ray toggle to `src/ui/ViewDock.ts`, mount the scale in `src/main.ts` while X-ray is on, and add styles to `src/styles.css` (including <900 px behaviour)
-- [ ] T066 [US4] Extend the smoke switch-sequence in `tests/smoke/story.spec.ts`: toggle X-ray on/off in several chapters and with `?lowq`; assert the scale lists the five values from the page and no console errors
-- [ ] T067 [US4] Manual check quickstart M2 item 1 in chapters 5, 6, 7, 8 and in Worker view
+- [X] T061 [P] [US4] Create `src/scene/effects/Xray.ts`: fade registry for decor materials (outer walls, filler boxes, window panes, slab edges, dark-floor props), `setXray(on)` GSAP fade to ~0.12 opacity with edges/outline kept, floor-role label (CSS2D) reveal for all 10 floors; works at the `low` tier; never restarts other timelines
+- [X] T062 [US4] Register decor materials with `Xray` in `src/scene/Building.ts` and add the 10 floor-role CSS2D labels (floor numbers + role names such as "Worker + registers", "L1 caches", "L2", "RAM archive", "lobby")
+- [X] T063 [US4] Implement `setXray` in `src/scene/index.ts` (backed by `ViewState`) and honour `?xray` at boot in `src/main.ts`
+- [X] T064 [P] [US4] Create `src/ui/LevelLadder.ts` with the **scale** layout: vertical rungs for registers/L1/L2/RAM/disk reading `LOCATIONS` from `src/scene/locations.ts` (no duplicated numbers), number formatting, active marker API driven by `onLedger` (`ledger.current.served`)
+- [X] T065 [US4] Add X-ray toggle to `src/ui/ViewDock.ts`, mount the scale in `src/main.ts` while X-ray is on, and add styles to `src/styles.css` (including <900 px behaviour)
+- [ ] T066 [US4] Extend the smoke switch-sequence in `tests/smoke/story.spec.ts`: toggle X-ray on/off in several chapters and with `?lowq`; assert the scale lists the five values from the page and no console errors (partial: written, not yet run — Playwright browsers not installed locally)
+- [X] T067 [US4] Manual check quickstart M2 item 1 in chapters 5, 6, 7, 8 and in Worker view
 
 **Checkpoint**: X-ray works in every chapter and tier.
 

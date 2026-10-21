@@ -4,6 +4,7 @@ import {
   LOCATIONS,
   LOCATION_BY_ID,
   locationOf,
+  WORK_CYCLES,
 } from '../../src/scene/locations';
 import { liftDuration, TIMING } from '../../src/scene/timing';
 
@@ -43,6 +44,19 @@ describe('location table', () => {
     for (const l of LOCATIONS) expect(ALL_HIGHLIGHT_IDS).toContain(l.id);
     expect(ALL_HIGHLIGHT_IDS).toContain('worker');
     expect(new Set(ALL_HIGHLIGHT_IDS).size).toBe(ALL_HIGHLIGHT_IDS.length);
+  });
+});
+
+describe('work cost', () => {
+  it('is tiny next to the closest memory wait, so waiting dominates', () => {
+    for (const cycles of Object.values(WORK_CYCLES)) {
+      expect(cycles).toBeGreaterThan(0);
+      expect(cycles).toBeLessThan(locationOf('l1d').latencyCycles);
+    }
+  });
+
+  it('prices exactly the two kinds of work that cost cycles', () => {
+    expect(Object.keys(WORK_CYCLES).sort()).toEqual(['compute', 'read-card']);
   });
 });
 
