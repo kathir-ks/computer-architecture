@@ -7,7 +7,8 @@ import { Highlighter } from './sync/Highlighter';
 import { ALL_HIGHLIGHT_IDS, type HighlightId } from './scene/locations';
 import { FreePlayPanel } from './ui/FreePlayPanel';
 import { applyOutcome, emptyScoreboard, fire, type Op, type Target } from './story/freeplay';
-import { createQualityWatchdog } from './scene/effects/Neon';
+import { parseViewParams } from './urlParams';
+import { ViewDock, nextTier } from './ui/ViewDock';
 import { mountStaticFallback } from './fallback/static-page';
 import gsap from 'gsap';
 
@@ -30,6 +31,9 @@ function mountDevHarness(scene: Scene): void {
   narration.innerHTML = '<p class="chapter-title">Dev harness — scene verbs</p>';
   const controls = document.getElementById('panel-controls')!;
   controls.style.display = 'none';
+
+  // Dev-only handle so poses can be inspected (e.g. scene.flyTo('floor10-desk').progress(1)).
+  (window as unknown as { __scene: Scene }).__scene = scene;
 
   let lastPulse = -1;
   const actions: Record<string, () => unknown> = {
@@ -68,7 +72,7 @@ function mountDevHarness(scene: Scene): void {
     'deliver → worker': () => scene.deliver(lastPulse, 'worker'),
     'mood tense': () => scene.setMood('tense-miss'),
     'mood working': () => scene.setMood('working'),
-    'quality toggle': () => scene.neon.setQuality(!scene.neon.isOn),
+    'quality cycle': () => scene.setQuality(nextTier(scene.getView().quality)),
   };
 
   const wrap = document.createElement('div');
@@ -84,8 +88,9 @@ function mountDevHarness(scene: Scene): void {
 }
 
 function boot(): void {
+  const params = parseViewParams(location.search);
   // ?nowebgl forces the fallback (manual testing per quickstart).
-  if (!webglAvailable() || new URLSearchParams(location.search).has('nowebgl')) {
+  if (!webglAvailable() || params.nowebgl) {
     hideLoading();
     mountStaticFallback();
     return;
@@ -94,39 +99,24 @@ function boot(): void {
   const scene = new Scene(
     document.getElementById('canvas-host')!,
     document.getElementById('labels-host')!,
+    // ?lowq starts on the lowest tier — weak GPUs, headless smoke tests.
+    { quality: params.lowq ? 'low' : 'high', cameraMode: params.cam },
   );
   hideLoading();
-  wireQuality(scene);
+  new ViewDock(document.getElementById('settings-chip')!, scene);
+  if (params.worker) scene.enterWorkerView();
 
-  if (new URLSearchParams(location.search).has('dev')) {
+  // ?debug exposes state (and the scene, for inspection) to smoke tests and manual checks.
+  if (params.debug) {
+    (window as unknown as { __cpu: unknown }).__cpu = { view: () => scene.getView(), scene };
+  }
+
+  if (params.dev) {
     mountDevHarness(scene);
     return;
   }
 
   wireStory(scene);
-}
-
-/** FPS watchdog auto-step-down + manual quality toggle chip (FR-013). */
-function wireQuality(scene: Scene): void {
-  // ?lowq starts with bloom off — weak GPUs, headless smoke tests.
-  if (new URLSearchParams(location.search).has('lowq')) scene.neon.setQuality(false);
-
-  const watchdog = createQualityWatchdog();
-  scene.world.onFps((fps) => {
-    if (watchdog(fps)) scene.neon.setQuality(false);
-  });
-
-  const chip = document.getElementById('settings-chip')!;
-  chip.hidden = false;
-  const btn = document.createElement('button');
-  const render = () => {
-    btn.textContent = scene.neon.isOn ? '✦ Quality: high' : '✧ Quality: low';
-    btn.classList.toggle('on', scene.neon.isOn);
-  };
-  btn.addEventListener('click', () => scene.neon.setQuality(!scene.neon.isOn));
-  scene.neon.onChange(render);
-  render();
-  chip.appendChild(btn);
 }
 
 function wireStory(scene: Scene): void {
@@ -146,7 +136,11 @@ function wireStory(scene: Scene): void {
     else panel.hideTiming();
   });
 
-  engine.onStatus((s) => panel.setStatus(s));
+  engine.onStatus((s) => {
+    panel.setStatus(s);
+    // Pausing the story pauses scripted camera steering too (FR-019).
+    scene.setAutomationPaused(s === 'paused');
+  });
 
   panel.onNext(() => engine.next());
   panel.onPauseToggle(() => {
@@ -185,6 +179,7 @@ function wireStory(scene: Scene): void {
 
   // Hash navigation mid-session: reset the book and start the target chapter.
   engine.onJump(() => {
+    scene.resumeCamera(); // a new chapter hands the camera back to the story
     panel.clear();
     document.getElementById('panel-controls')!.style.display = '';
     document.getElementById('freeplay')?.setAttribute('hidden', '');
@@ -234,6 +229,7 @@ function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine):
     tl.add(scene.flash(outcome.resolved, outcome.hit ? 'hit' : 'focus'));
 
     // The journey: STOREs travel outward, LOADs/ADDs travel to the desk.
+    const journeyStart = tl.duration();
     if (op === 'STORE') {
       const pulse = scene.spawnPulse('registers', 'data');
       tl.add(pulse.tl);
@@ -253,6 +249,14 @@ function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine):
         tl.add(scene.carry(pulse.id, outcome.resolved, 'registers'));
       }
       tl.add(scene.deliver(pulse.id, 'worker'));
+
+      // The Worker is stuck waiting for anything slower than the L1 shelf: tap away until the data lands (FR-011).
+      if (outcome.resolved !== 'l1d') {
+        const taps = gsap.timeline();
+        const waitFor = tl.duration() - journeyStart;
+        for (let t = 0; t < waitFor; t += 1.3) taps.add(scene.workerWork('foot-tap'));
+        tl.add(taps, journeyStart);
+      }
       tl.add(scene.workerWork(op === 'ADD' ? 'compute' : 'idle'));
     }
 
