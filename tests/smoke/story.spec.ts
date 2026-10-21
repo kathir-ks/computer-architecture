@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { RUNGS, formatCycles } from '../../src/ui/ladderModel';
 
+/**
+ * Headless Chromium renders WebGL on a software rasteriser, so every action on the 3D page takes a second or
+ * two. Tests that drive many of them get more than the 60 s default rather than flaking on a slow runner.
+ */
+const SLOW_TEST_MS = 150_000;
+
 test('page loads, canvas renders, story begins', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#canvas-host canvas')).toBeVisible();
@@ -80,6 +86,7 @@ test('camera modes switch freely; dragging takes the camera and Resume hands it 
 });
 
 test('Worker view: enter, look around, leave with Esc and the previous camera mode returns', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -113,7 +120,7 @@ test('Worker view: enter, look around, leave with Esc and the previous camera mo
 
   // The seat works at every quality tier too.
   await page.getByRole('button', { name: /Worker view/ }).click();
-  await page.getByRole('button', { name: /Quality/ }).click();
+  await page.getByRole('button', { name: /quality/i }).click();
   await page.getByRole('button', { name: /Exit Worker view/ }).click();
   expect(await view()).toMatchObject({ workerView: false });
 
@@ -121,6 +128,7 @@ test('Worker view: enter, look around, leave with Esc and the previous camera mo
 });
 
 test('X-ray: switches on and off in several chapters and at low quality, labelling floors and listing the five latencies', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -132,11 +140,14 @@ test('X-ray: switches on and off in several chapters and at low quality, labelli
   // The expected figures come from the same table the app reads, formatted the way the page shows them.
   const expected = RUNGS.map((r) => formatCycles(r.cycles));
 
-  for (const chapter of [3, 6, 7]) {
-    await page.goto(`/?lowq&debug#chapter-${chapter}`);
-    await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  await page.goto('/?lowq&debug#chapter-3');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  const toggle = page.getByRole('button', { name: /X-ray/ });
 
-    const toggle = page.getByRole('button', { name: /X-ray/ });
+  for (const chapter of [3, 6, 7]) {
+    // Jump by address, the way a learner would; every reload of the 3D page costs seconds on a software GPU.
+    if (chapter !== 3) await page.evaluate((c) => (location.hash = `#chapter-${c}`), chapter);
+    await expect(page.locator('.chapter-title').last()).toContainText(`Chapter ${chapter}`);
     await expect(page.locator('#scale-host')).toBeHidden();
 
     await toggle.click();
@@ -161,6 +172,7 @@ test('X-ray: switches on and off in several chapters and at low quality, labelli
 });
 
 test('live aids: the cycle meter ends chapter 6 on exactly the RAM latency, with the ladder showing the misses', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
