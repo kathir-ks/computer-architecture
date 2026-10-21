@@ -10,6 +10,8 @@ import { applyOutcome, emptyScoreboard, fire, type Op, type Target } from './sto
 import { parseViewParams } from './urlParams';
 import { ViewDock, nextTier } from './ui/ViewDock';
 import { LevelLadder } from './ui/LevelLadder';
+import { AidsDock } from './ui/AidsDock';
+import { LocalityStrip } from './ui/LocalityStrip';
 import { mountStaticFallback } from './fallback/static-page';
 import gsap from 'gsap';
 
@@ -100,6 +102,23 @@ function mountScale(scene: Scene): void {
   sync(scene.getView().xray);
 }
 
+/**
+ * The live aids: cycle meter, compact ladder, idle-time counter and locality strip. All of them follow the
+ * cycle ledger, so they agree with each other, the scale and the free-play scoreboard. Only mounted when
+ * 3D booted — the no-WebGL fallback has no scene to measure.
+ */
+function mountAids(scene: Scene): void {
+  // Short screens start collapsed to the meter line so the 3D view keeps its room.
+  const narrow = window.matchMedia?.('(max-width: 900px)').matches ?? false;
+  const dock = new AidsDock(document.getElementById('aids')!, { collapsed: narrow, localityOpen: !narrow });
+  const ladder = new LevelLadder(dock.ladderSlot, 'compact');
+  new LocalityStrip(dock.localitySlot);
+  scene.onLedger((s) => {
+    dock.update(s);
+    ladder.update(s.current);
+  });
+}
+
 function boot(): void {
   const params = parseViewParams(location.search);
   // ?nowebgl forces the fallback (manual testing per quickstart).
@@ -118,6 +137,7 @@ function boot(): void {
   hideLoading();
   new ViewDock(document.getElementById('settings-chip')!, scene);
   mountScale(scene);
+  mountAids(scene);
   if (params.xray) scene.setXray(true);
   if (params.worker) scene.enterWorkerView();
 

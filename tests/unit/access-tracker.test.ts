@@ -276,10 +276,35 @@ describe('AccessTracker — free play', () => {
       const tl = freePlayJourney(verbs, outcome);
       tl.pause();
       tl.progress(1);
+
+      // Each journey's final meter value is exactly what the scoreboard charged for that fire.
+      const last = ledger.history.at(-1)!;
+      expect(last.cycles, `fire ${i} (${outcome.op} ${outcome.resolved})`).toBe(outcome.cycles);
+      expect(last.served).toBe(outcome.resolved);
+      expect(last.kind).toBe(outcome.op === 'STORE' ? 'store' : 'load');
+      // Running total stays in step as the run goes on, not only at the end.
+      expect(now().idleCycles).toBe(board.totalCycles);
     }
     expect(board.fired).toBe(24);
-    expect(now().idleCycles).toBe(board.totalCycles);
     expect(ledger.history).toHaveLength(24);
+  });
+
+  it('the hit/miss verdict the ladder shows agrees with the scoreboard for every fire', () => {
+    const outcomes: FreePlayOutcome[] = (['l1d', 'l2', 'ram', 'disk'] as const).map((resolved) => ({
+      op: 'LOAD',
+      resolved,
+      cycles: locationOf(resolved).latencyCycles,
+      hit: resolved === 'l1d',
+    }));
+    for (const outcome of outcomes) {
+      const tl = freePlayJourney(verbs, outcome);
+      tl.pause();
+      tl.progress(1);
+      const probes = ledger.history.at(-1)!.probes;
+      // Everything closer than the answer missed; only an L1d answer is a hit.
+      expect(probes.filter((p) => p.result === 'miss').length).toBe(['l1d', 'l2', 'ram', 'disk'].indexOf(outcome.resolved));
+      expect(probes.some((p) => p.result === 'hit')).toBe(outcome.hit);
+    }
   });
 });
 

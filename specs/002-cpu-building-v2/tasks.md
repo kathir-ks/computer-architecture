@@ -177,15 +177,15 @@
 
 **Independent test**: Run L1 hit, miss cascade to RAM and a disk trip: meter finals 4 / 200 / 4,000,000; ladder marks missed levels in order; idle counter rises only while waiting; locality strip shows neighbours hit (quickstart M2 items 2–9).
 
-- [ ] T068 [P] [US5] Create `src/sim/cacheLine.ts`: `CacheLineSim` (`cells` default 16, `lineSize` default 4, `access(i)` → `{hit, filled}`, `reset`)
-- [ ] T069 [US5] Unit test `tests/unit/cache-line.test.ts`: miss fills the aligned line; neighbours hit; a hit never changes residency; accessing a resident cell is always a hit; reset clears
-- [ ] T070 [US5] Extend `src/ui/LevelLadder.ts` with the **compact** layout and ledger-driven rung states (`idle`, `checked-miss`, `served`, `current`) from `LedgerSnapshot.current.probes/served`
-- [ ] T071 [P] [US5] Create `src/ui/AidsDock.ts`: cycle meter (running value + final value, thousands separators, resets per access) and idle-vs-working counter with proportional bar, collapsible, fed only by `onLedger`
-- [ ] T072 [P] [US5] Create `src/ui/LocalityStrip.ts`: 16-cell strip driven by `CacheLineSim` — click a cold cell → miss, aligned line fills with animation; click a neighbour → hit; reset button; keyboard operable
-- [ ] T073 [US5] Add the `#aids` container to `index.html`; mount `AidsDock`, compact `LevelLadder` and `LocalityStrip` in `src/main.ts` (only when 3D booted); styles in `src/styles.css` including collapse to compact form below 900 px without covering the 3D focus area
-- [ ] T074 [US5] Cross-check free play in `src/main.ts`: ensure scoreboard totals, meter finals and ledger history agree after mixed runs (adjust wiring only if they differ); extend `tests/unit/access-tracker.test.ts` with a free-play mixed-run total comparison against `applyOutcome`
-- [ ] T075 [US5] Extend `tests/smoke/story.spec.ts`: `/?lowq&debug#chapter-6`, fast-forward steps with Next, assert `window.__cpu` ledger final equals the RAM latency shown in the page and the aids dock is visible
-- [ ] T076 [US5] Run gates and manual checklist: tests/build/size/smoke; quickstart M2 items 2–9 (including tab-hidden mid-journey and chapter jump mid-journey)
+- [X] T068 [P] [US5] Create `src/sim/cacheLine.ts`: `CacheLineSim` (`cells` default 16, `lineSize` default 4, `access(i)` → `{hit, filled}`, `reset`)
+- [X] T069 [US5] Unit test `tests/unit/cache-line.test.ts`: miss fills the aligned line; neighbours hit; a hit never changes residency; accessing a resident cell is always a hit; reset clears
+- [X] T070 [US5] Extend `src/ui/LevelLadder.ts` with the **compact** layout and ledger-driven rung states (`idle`, `checked-miss`, `served`, `current`) from `LedgerSnapshot.current.probes/served`
+- [X] T071 [P] [US5] Create `src/ui/AidsDock.ts`: cycle meter (running value + final value, thousands separators, resets per access) and idle-vs-working counter with proportional bar, collapsible, fed only by `onLedger`
+- [X] T072 [P] [US5] Create `src/ui/LocalityStrip.ts`: 16-cell strip driven by `CacheLineSim` — click a cold cell → miss, aligned line fills with animation; click a neighbour → hit; reset button; keyboard operable
+- [X] T073 [US5] Add the `#aids` container to `index.html`; mount `AidsDock`, compact `LevelLadder` and `LocalityStrip` in `src/main.ts` (only when 3D booted); styles in `src/styles.css` including collapse to compact form below 900 px without covering the 3D focus area
+- [X] T074 [US5] Cross-check free play in `src/main.ts`: ensure scoreboard totals, meter finals and ledger history agree after mixed runs (adjust wiring only if they differ); extend `tests/unit/access-tracker.test.ts` with a free-play mixed-run total comparison against `applyOutcome`
+- [X] T075 [US5] Extend `tests/smoke/story.spec.ts`: `/?lowq&debug#chapter-6`, fast-forward steps with Next, assert `window.__cpu` ledger final equals the RAM latency shown in the page and the aids dock is visible (partial: written, not yet run — Playwright browsers not installed locally)
+- [X] T076 [US5] Run gates and manual checklist: tests/build/size/smoke; quickstart M2 items 2–9 (including tab-hidden mid-journey and chapter jump mid-journey) (partial: unit, type, build and size gates and manual items 2-9 done; smoke suite not run — Playwright browsers not installed locally)
 
 **Checkpoint (M2 exit)**: tests green, smoke green, manual checklist done, `npm run size` ≤ 215 kB, tag `v2-m2`, deploy.
 

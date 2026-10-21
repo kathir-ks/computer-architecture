@@ -14,6 +14,7 @@ const TARGETS: Array<{ id: Target; label: string }> = [
 export class FreePlayPanel {
   private root: HTMLElement;
   private fireBtn!: HTMLButtonElement;
+  private resetBtn!: HTMLButtonElement;
   private cyclesEl!: HTMLElement;
   private statEls!: { hits: HTMLElement; misses: HTMLElement; cycles: HTMLElement };
   private op: Op = 'LOAD';
@@ -89,6 +90,7 @@ export class FreePlayPanel {
     };
 
     const reset = document.createElement('button');
+    this.resetBtn = reset;
     reset.textContent = 'Reset scoreboard';
     reset.className = 'fp-reset';
     reset.style.cssText =
@@ -114,6 +116,9 @@ export class FreePlayPanel {
 
   setBusy(busy: boolean): void {
     this.fireBtn.disabled = busy;
+    // Resetting mid-journey would zero the scoreboard and the aids while the data is still on its way,
+    // leaving them out of step with each other when it lands.
+    this.resetBtn.disabled = busy;
     this.fireBtn.textContent = busy ? '… data in transit' : '⚡ Fire instruction';
   }
 

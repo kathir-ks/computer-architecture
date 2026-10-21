@@ -19,23 +19,25 @@ const STATE_MARK: Record<RungState, string> = {
 };
 
 /**
- * Vertical latency scale: one rung per memory level, closest to the Worker at the top, with the cost in
- * cycles beside it and a marker on the level currently being used. Plain DOM; every number comes from
- * `locations.ts` through `ladderModel`, and the marker comes from the cycle ledger — this component
- * computes nothing itself.
+ *  scale    vertical rungs with a bar and the cost in cycles — the X-ray side panel
+ *  compact  one short row of chips, no numbers — the always-on aid beside the cycle meter
+ */
+export type LadderLayout = 'scale' | 'compact';
+
+/**
+ * The memory ladder: one rung per level, closest to the Worker first, with a marker on each level the
+ * current access has checked or is using. Plain DOM; every number comes from `locations.ts` through
+ * `ladderModel`, and every state comes from the cycle ledger — this component computes nothing itself.
  */
 export class LevelLadder {
   private rows = new Map<RungId, HTMLLIElement>();
   private marks = new Map<RungId, HTMLSpanElement>();
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, layout: LadderLayout = 'scale') {
+    const compact = layout === 'compact';
     const section = document.createElement('section');
-    section.className = 'level-ladder scale';
-    section.setAttribute('aria-label', 'How far each level is, in cycles');
-
-    const title = document.createElement('h2');
-    title.className = 'ladder-title';
-    title.textContent = 'Distance in cycles';
+    section.className = `level-ladder ${layout}`;
+    section.setAttribute('aria-label', compact ? 'Levels this access has checked' : 'How far each level is, in cycles');
 
     const list = document.createElement('ol');
     list.className = 'ladder-rungs';
@@ -47,33 +49,44 @@ export class LevelLadder {
       const name = document.createElement('span');
       name.className = 'rung-name';
       name.textContent = rung.label;
+      li.appendChild(name);
 
-      const track = document.createElement('span');
-      track.className = 'rung-bar';
-      const fill = document.createElement('i');
-      fill.style.width = `${(barFraction(rung.cycles) * 100).toFixed(1)}%`;
-      track.appendChild(fill);
+      if (!compact) {
+        const track = document.createElement('span');
+        track.className = 'rung-bar';
+        const fill = document.createElement('i');
+        fill.style.width = `${(barFraction(rung.cycles) * 100).toFixed(1)}%`;
+        track.appendChild(fill);
 
-      const cycles = document.createElement('span');
-      cycles.className = 'rung-cycles';
-      cycles.textContent = formatCycles(rung.cycles);
+        const cycles = document.createElement('span');
+        cycles.className = 'rung-cycles';
+        cycles.textContent = formatCycles(rung.cycles);
+        li.append(track, cycles);
+      }
 
       const mark = document.createElement('span');
       mark.className = 'rung-mark';
       mark.setAttribute('aria-hidden', 'true');
+      li.appendChild(mark);
 
-      li.append(name, track, cycles, mark);
-      li.setAttribute('aria-label', `${rung.label}: ${formatCycles(rung.cycles)} cycles`);
+      li.title = `${rung.label}: ${formatCycles(rung.cycles)} cycles`;
+      li.setAttribute('aria-label', li.title);
       list.appendChild(li);
       this.rows.set(rung.id, li);
       this.marks.set(rung.id, mark);
     }
 
-    const note = document.createElement('p');
-    note.className = 'ladder-note';
-    note.textContent = 'Bars use a log scale — the numbers are the real ratio.';
-
-    section.append(title, list, note);
+    if (!compact) {
+      const title = document.createElement('h2');
+      title.className = 'ladder-title';
+      title.textContent = 'Distance in cycles';
+      const note = document.createElement('p');
+      note.className = 'ladder-note';
+      note.textContent = 'Bars use a log scale — the numbers are the real ratio.';
+      section.append(title, list, note);
+    } else {
+      section.appendChild(list);
+    }
     root.appendChild(section);
   }
 
