@@ -16,6 +16,8 @@ import {
 } from './props';
 import { seeded } from './rand';
 import { Feedback } from './effects/Feedback';
+import { Xray } from './effects/Xray';
+import { FLOOR_ROLES } from './floorRoles';
 import type { QualityTier } from './view/viewState';
 
 // ---- shared world geometry constants ----
@@ -90,6 +92,8 @@ export class Building {
   private meshToId = new Map<THREE.Object3D, HighlightId>();
   private raycaster = new THREE.Raycaster();
   private feedback: Feedback;
+  /** The cross-section: decoration registered below fades, blueprint outlines and floor-role labels appear. */
+  readonly xray = new Xray();
 
   constructor(
     private world: World,
@@ -182,12 +186,16 @@ export class Building {
     this.group.add(trimMesh);
 
     // Back and side walls with lit windows — front (+z) stays open for the cutaway.
-    const back = new THREE.Mesh(new THREE.BoxGeometry(BLD_W, H, 0.25), m.windowWall(BLD_W, H));
+    const backMat = m.windowWall(BLD_W, H);
+    this.xray.fade(backMat);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(BLD_W, H, 0.25), backMat);
     back.position.set(0, H / 2, -BLD_D / 2);
     this.group.add(back);
 
     for (const sx of [-BLD_W / 2, BLD_W / 2]) {
-      const side = new THREE.Mesh(new THREE.BoxGeometry(0.25, H, BLD_D), m.windowWall(BLD_D, H));
+      const sideMat = m.windowWall(BLD_D, H);
+      this.xray.fade(sideMat);
+      const side = new THREE.Mesh(new THREE.BoxGeometry(0.25, H, BLD_D), sideMat);
       side.position.set(sx, H / 2, 0);
       this.group.add(side);
     }
@@ -201,20 +209,31 @@ export class Building {
       (litFloors.has(f) ? bright : dim).push(strip);
     }
     const brightMesh = instanced(m.emitter(0xfff1d0, 1.3), bright);
-    const dimMesh = instanced(m.emitter(0x5a6a9a, 0.6), dim);
+    const dimMat = m.emitter(0x5a6a9a, 0.6);
+    this.xray.fade(dimMat); // the strips on the spare floors are decoration
+    const dimMesh = instanced(dimMat, dim);
     brightMesh.castShadow = dimMesh.castShadow = false;
     this.group.add(brightMesh, dimMesh);
 
     // Unused floors: racks of idle hardware with blinking-looking LEDs.
-    const rackMat = m.darkMetal;
+    // Its own copy: the shared dark metal is also the lift rails and the Worker's desk, which must not fade.
+    const rackMat = m.darkMetal.clone();
+    this.xray.fade(rackMat);
+    // In X-ray the racks give way to a blueprint outline, so the spare floors still read as floors.
+    const blueprintMat = new THREE.LineBasicMaterial({ color: 0x7fd8ff, transparent: true });
+    this.xray.reveal(blueprintMat, 0.45);
     const rnd = seeded(606);
     const greens: Slot[] = [];
     const ambers: Slot[] = [];
     for (const f of [1, 2, 3, 5, 6, 7]) {
       const w = BLD_W - 4.5;
-      const filler = new THREE.Mesh(new THREE.BoxGeometry(w, FLOOR_H - 1.2, BLD_D - 3), rackMat);
+      const fillerGeo = new THREE.BoxGeometry(w, FLOOR_H - 1.2, BLD_D - 3);
+      const filler = new THREE.Mesh(fillerGeo, rackMat);
       filler.position.set(0.8, floorCenterY(f), -0.6);
       this.group.add(filler);
+      const frame = new THREE.LineSegments(new THREE.EdgesGeometry(fillerGeo), blueprintMat);
+      frame.position.copy(filler.position);
+      this.group.add(frame);
       const frontZ = -0.6 + (BLD_D - 3) / 2 + 0.03;
       for (let i = 0; i < 28; i++) {
         const led: Slot = {
@@ -228,8 +247,12 @@ export class Building {
         (rnd() < 0.7 ? greens : ambers).push(led);
       }
     }
-    const ledG = instanced(m.emitter(0x40ff9a, 2), greens);
-    const ledA = instanced(m.emitter(0xffb040, 2), ambers);
+    const ledGMat = m.emitter(0x40ff9a, 2);
+    const ledAMat = m.emitter(0xffb040, 2);
+    this.xray.fade(ledGMat);
+    this.xray.fade(ledAMat);
+    const ledG = instanced(ledGMat, greens);
+    const ledA = instanced(ledAMat, ambers);
     ledG.castShadow = ledA.castShadow = false;
     this.group.add(ledG, ledA);
 
@@ -257,6 +280,22 @@ export class Building {
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), m.emitter(0xff4060, 2.4));
     beacon.position.set(5, H + 3.25, -2.8);
     this.group.add(beacon);
+
+    // Floor-role labels: only visible in X-ray, outside the right wall so they never cover a room.
+    for (const { floor, role } of FLOOR_ROLES) {
+      // CSS2D centres its element on the anchor; a zero-width holder with the text hanging off its
+      // right edge makes the label start at the wall and grow away from the building at any zoom.
+      const el = document.createElement('div');
+      el.className = 'floor-role-anchor';
+      const text = document.createElement('span');
+      text.className = 'floor-label floor-role';
+      text.textContent = `${floor} · ${role}`;
+      el.appendChild(text);
+      const tag = new CSS2DObject(el);
+      tag.position.set(BLD_W / 2 + 0.5, floorCenterY(floor), BLD_D / 2);
+      this.group.add(tag);
+      this.xray.label(tag);
+    }
 
     // Rooftop sign.
     const signEl = document.createElement('div');

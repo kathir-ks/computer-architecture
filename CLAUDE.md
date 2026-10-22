@@ -48,7 +48,9 @@ Other single-sources-of-truth:
 
 Everything non-visual gets a Vitest test; choreography is verified by eye against the
 per-chapter checklist in `specs/001-cpu-building-story/quickstart.md`. Playwright
-smoke (4 tests) gates deploy in CI. GSAP is stubbed in engine tests (see FakeTimeline
+smoke (8 tests) gates deploy in CI — a failing smoke test blocks the Pages deploy, so run
+`npx playwright install chromium` once, then `npm run build && npm run test:smoke`
+locally before merging to master. GSAP is stubbed in engine tests (see FakeTimeline
 in `tests/unit/story-engine.test.ts`).
 
 ## Gotchas learned the hard way
@@ -58,7 +60,11 @@ in `tests/unit/story-engine.test.ts`).
 - Deep links skip chapter 1's reveals, so `main.ts` pre-reveals all rooms when
   starting past chapter 1.
 - Headless Chromium renders WebGL on a software rasterizer — bloom makes it crawl.
-  Smoke tests that interact must use `?lowq`.
+  Smoke tests that interact must use `?lowq`. Every action on the 3D page still takes
+  0.5–1.5 s there, so tests that drive many of them need `test.setTimeout(SLOW_TEST_MS)`
+  (the 60 s default is not enough), and should jump chapters by `location.hash` rather
+  than reload the page. Locate dock buttons by their accessible name — the quality
+  button's comes from its `aria-label` ("Graphics quality…"), so use `/quality/i`.
 - npm on Windows sometimes drops `@rollup/rollup-win32-x64-msvc` (optional-deps bug);
   if rollup fails with MODULE_NOT_FOUND, delete `node_modules` and reinstall — do NOT
   add the package to `package.json` directly, since that forces it as a mandatory dep
@@ -76,9 +82,12 @@ never rework existing chapters).
 
 ## Deployment status
 
-No GitHub remote yet. To go live: create the repo, push (with tags), then set
-Settings → Pages → Source = "GitHub Actions". CI runs unit tests → build → smoke →
-deploy on every push to main/master.
+Remote: `kathir-ks/computer-architecture`. Pages source is "GitHub Actions". CI runs
+unit tests → build → size budget → smoke → deploy on every push to main/master (and on
+manual "Run workflow"). If a deploy run fails, the live site stays on the last
+successful build — check which step failed before re-running. v2 ships in milestones on
+branch `002-cpu-building-v2` (local tags `v2-m1`, `v2-m2`); merge to master only with
+the full local gate green.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,

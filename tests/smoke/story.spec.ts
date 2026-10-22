@@ -1,4 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { RUNGS, formatCycles } from '../../src/ui/ladderModel';
+
+/**
+ * Headless Chromium renders WebGL on a software rasteriser, so every action on the 3D page takes a second or
+ * two. Tests that drive many of them get more than the 60 s default rather than flaking on a slow runner.
+ */
+const SLOW_TEST_MS = 150_000;
 
 test('page loads, canvas renders, story begins', async ({ page }) => {
   await page.goto('/');
@@ -79,6 +86,7 @@ test('camera modes switch freely; dragging takes the camera and Resume hands it 
 });
 
 test('Worker view: enter, look around, leave with Esc and the previous camera mode returns', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -112,9 +120,98 @@ test('Worker view: enter, look around, leave with Esc and the previous camera mo
 
   // The seat works at every quality tier too.
   await page.getByRole('button', { name: /Worker view/ }).click();
-  await page.getByRole('button', { name: /Quality/ }).click();
+  await page.getByRole('button', { name: /quality/i }).click();
   await page.getByRole('button', { name: /Exit Worker view/ }).click();
   expect(await view()).toMatchObject({ workerView: false });
+
+  expect(errors).toEqual([]);
+});
+
+test('X-ray: switches on and off in several chapters and at low quality, labelling floors and listing the five latencies', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  const xrayState = () =>
+    page.evaluate(() => (window as unknown as { __cpu: { view(): { xray: boolean } } }).__cpu.view().xray);
+  // The expected figures come from the same table the app reads, formatted the way the page shows them.
+  const expected = RUNGS.map((r) => formatCycles(r.cycles));
+
+  await page.goto('/?lowq&debug#chapter-3');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  const toggle = page.getByRole('button', { name: /X-ray/ });
+
+  for (const chapter of [3, 6, 7]) {
+    // Jump by address, the way a learner would; every reload of the 3D page costs seconds on a software GPU.
+    if (chapter !== 3) await page.evaluate((c) => (location.hash = `#chapter-${c}`), chapter);
+    await expect(page.locator('.chapter-title').last()).toContainText(`Chapter ${chapter}`);
+    await expect(page.locator('#scale-host')).toBeHidden();
+
+    await toggle.click();
+    expect(await xrayState()).toBe(true);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#scale-host')).toBeVisible();
+    await expect(page.locator('.ladder-rungs .rung-cycles')).toHaveText(expected);
+
+    await toggle.click();
+    expect(await xrayState()).toBe(false);
+    await expect(page.locator('#scale-host')).toBeHidden();
+  }
+
+  // Straight in via the URL, and alongside Worker view.
+  await page.goto('/?lowq&debug&xray');
+  await expect(page.locator('#scale-host')).toBeVisible();
+  await page.getByRole('button', { name: /Worker view/ }).click();
+  await expect(page.locator('#scale-host')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  expect(errors).toEqual([]);
+});
+
+test('live aids: the cycle meter ends chapter 6 on exactly the RAM latency, with the ladder showing the misses', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  const ram = RUNGS.find((r) => r.id === 'ram')!;
+  type Ledger = { current: { served: string | null; done: boolean; cycles: number } | null };
+  const ledger = () =>
+    page.evaluate(() => (window as unknown as { __cpu: { ledger(): Ledger } }).__cpu.ledger().current);
+
+  await page.goto('/?lowq&debug#chapter-6');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  await expect(page.locator('#aids .aids')).toBeVisible();
+
+  // Fast-forward the chapter with Next until the RAM access has been delivered.
+  const next = page.locator('#btn-next');
+  await expect
+    .poll(
+      async () => {
+        await next.click();
+        const j = await ledger();
+        return j?.served === 'ram' && j.done;
+      },
+      { timeout: 60_000, intervals: [250] },
+    )
+    .toBe(true);
+
+  expect((await ledger())!.cycles).toBe(ram.cycles);
+  await expect(page.locator('.meter-value')).toHaveText(formatCycles(ram.cycles));
+  await expect(page.locator('.meter')).toHaveAttribute('data-state', 'done');
+
+  // The ladder shows the levels that missed, in the order they were checked, and RAM as the one that served.
+  await page.getByRole('button', { name: /Aids/ }).click();
+  const state = (rung: string) => page.locator(`.aids .ladder-rungs li[data-rung="${rung}"]`).getAttribute('data-state');
+  expect(await state('l1')).toBe('checked-miss');
+  expect(await state('l2')).toBe('checked-miss');
+  expect(await state('ram')).toBe('served');
+  expect(await state('disk')).toBe('idle');
 
   expect(errors).toEqual([]);
 });

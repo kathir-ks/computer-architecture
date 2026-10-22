@@ -28,6 +28,13 @@ export function locationOf(id: LocationId): Location {
   return loc;
 }
 
+/**
+ * Cycles of real work a Worker task costs. Deliberately tiny next to the memory latencies above:
+ * the contrast between working and waiting is the whole lesson.
+ */
+export const WORK_CYCLES = { compute: 1, 'read-card': 1 } as const;
+export type WorkCycleKind = keyof typeof WORK_CYCLES;
+
 /** Extra highlightable scene elements that are not memory levels. */
 export const SCENE_ELEMENT_IDS = ['worker', 'pc', 'lift', 'courier'] as const;
 export type SceneElementId = (typeof SCENE_ELEMENT_IDS)[number];

@@ -70,7 +70,7 @@ Invariants (each has a test):
 
 ## LadderState (derived, `src/ui/LevelLadder.ts`)
 
-For each of `registers, l1, l2, ram, disk`: `'idle' | 'checked-miss' | 'served' | 'current'`, computed from `CycleLedger.current`. The "scale" layout additionally renders `latencyCycles` from `LOCATIONS` and a marker at the level currently being served.
+For each of `registers, l1, l2, ram, disk` (L1 instruction and data caches share the `l1` rung): `'idle' | 'checked-miss' | 'checked-hit' | 'served' | 'current'`, computed from `CycleLedger.current`. The "scale" layout additionally renders `latencyCycles` from `LOCATIONS` and a marker at the level currently being served.
 
 ## CacheLineSim (`src/sim/cacheLine.ts`)
 

@@ -69,7 +69,7 @@
 - [X] T021 [P] [US1] Rebuild `src/scene/Worker.ts` body: articulated head/torso/arms/legs/face and hair, desk props kept; states `compute` (typing arms), `read-card` (lean + head tilt), `idle` (breathing), `foot-tap` (impatient foot + glance toward the lift door); keep `playWork`, `drawer`, `dispenseTicket`, `showCard`, `splitCard`, `setGlow`, `clickTargets` signatures
 - [X] T022 [P] [US1] Update `src/scene/Courier.ts`: PBR van, spinning wheels during `trip`, headlights; keep `trip` timing and `clickTargets`
 - [X] T023 [US1] Integrate `Quality` into `src/scene/index.ts` (`Scene` owns it; `neon` remains reachable for the dev harness) and update `wireQuality` in `src/main.ts` so the chip cycles tiers and `?lowq` starts at `low`; add a "quality cycle" button to the `?dev` harness
-- [ ] T024 [US1] (partial: unit tests, typecheck, build, size and the 4 smoke scenarios by hand are done; Playwright browsers are not installed, and manual items 3 and 5 are not fully checked) Run gates and manual checklist: `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; then quickstart M1 items 1, 2, 3, 5 at default and `?lowq`; fix regressions before continuing
+- [ ] T024 [US1] (partial: unit tests, typecheck, build, size and the 4 smoke scenarios by hand are done; the smoke suite passes locally (8/8), but manual items 3 and 5 are not fully checked) Run gates and manual checklist: `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; then quickstart M1 items 1, 2, 3, 5 at default and `?lowq`; fix regressions before continuing
 
 **Checkpoint**: v1 story plays identically in content, with the new look, trails, character and quality tiers.
 
@@ -93,7 +93,7 @@
 - [X] T034 [US2] Add dock styles (and the <900 px bottom-drawer adjustment) to `src/styles.css`
 - [X] T035 [US2] Update `src/main.ts`: parse `parseViewParams`, apply `?cam=`, construct `ViewDock`, connect `engine.onStatus` → `scene.setAutomationPaused(status === 'paused')`, expose `window.__cpu` (view snapshot getter) only when `?debug`
 - [X] T036 [US2] Extend `tests/smoke/story.spec.ts`: switch-sequence test (`/?lowq&debug`): cycle Free → Follow → Cinematic during playback, press Resume camera after a mouse drag, assert `window.__cpu` reflects each mode and the page logs no console errors (SC-010 first part)
-- [ ] T037 [US2] (partial: unit tests, typecheck, build, size and scripted in-browser checks of modes, shot arbitration, input-cancel and pause are done; Playwright not run, real-time motion not judged because the pane renders at about 1 fps) Run gates and manual checklist: `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; quickstart M1 items 6, 7, 8 (Follow incl. van trip; drag/wheel/touch/arrow cancel; pause freezes camera); fix regressions
+- [ ] T037 [US2] (partial: unit tests, typecheck, build, size and scripted in-browser checks of modes, shot arbitration, input-cancel and pause are done; the smoke suite passes locally (8/8); real-time motion not judged because the pane renders at about 1 fps) Run gates and manual checklist: `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; quickstart M1 items 6, 7, 8 (Follow incl. van trip; drag/wheel/touch/arrow cancel; pause freezes camera); fix regressions
 
 **Checkpoint**: All v1 chapters play in all three camera modes; Free mode matches v1 exactly.
 
@@ -112,7 +112,7 @@
 - [X] T042 [US3] Implement `enterWorkerView`/`exitWorkerView` in `src/scene/index.ts` (calls `Worker.setFirstPerson`, `rig` worker mode, `ViewState`), and honour `?view=worker` at boot in `src/main.ts`
 - [X] T043 [P] [US3] Add **Worker view** toggle and an **Exit** affordance (also `Esc`) to `src/ui/ViewDock.ts`, with styles in `src/styles.css`
 - [X] T044 [US3] Extend the smoke switch-sequence in `tests/smoke/story.spec.ts`: enter Worker view, exit, assert previous camera mode restored via `window.__cpu`
-- [ ] T045 [US3] (partial: unit tests, typecheck, build, size and scripted in-browser checks are done; Playwright not run; look-around feel and door-empty wait comparison not judged in real time) Run gates and manual checklist: tests/build/size/smoke; quickstart M1 item 9 (clamped look, no inside-out geometry, door-empty comparison L1 vs RAM, restore on exit)
+- [ ] T045 [US3] (partial: unit tests, typecheck, build, size and scripted in-browser checks are done; the smoke suite passes locally (8/8); look-around feel and door-empty wait comparison not judged in real time) Run gates and manual checklist: tests/build/size/smoke; quickstart M1 item 9 (clamped look, no inside-out geometry, door-empty comparison L1 vs RAM, restore on exit)
 
 **Checkpoint**: Worker view works in the story and in free play at every quality tier.
 
@@ -130,7 +130,7 @@
 - [X] T049 [P] [US7] Add launch squash/wind-up and arrival settle to `spawnPulse`/`deliver` in `src/scene/index.ts` and `Pulse.ts` (durations from `timing.ts`; scaled for reduced motion only where decorative)
 - [X] T050 [P] [US7] Apply `motion.ts` across decorative loops (Worker idle sway, neon pulsing, trail shimmer) in `src/scene/Worker.ts`, `src/scene/effects/Neon.ts`-adjacent code in `src/scene/index.ts`, and `Trails.ts`; teaching animations (carry, trips) keep normal pace
 - [X] T051 [US7] Update free-play wiring in `src/main.ts` (`wireFreePlay`): run `scene.workerWork('foot-tap')` together with the data journey whenever the resolved level is slower than L1 (FR-011), keep the existing compute/idle follow-up
-- [ ] T052 [US7] (partial: tests, typecheck, build, size, chapter-diff check and a scripted full-story run are done; Playwright not run; the v1 per-chapter visual checklist and motion feel not judged in real time; milestone tag and deploy await your go-ahead) Run gates and manual checklist: tests/build/size/smoke; quickstart M1 items 4, 8, 10, 11 including the full v1 per-chapter checklist from `specs/001-cpu-building-story/quickstart.md`; confirm `git diff 130a23f -- src/story/chapters/ch[1-8]*.ts` is empty
+- [ ] T052 [US7] (partial: tests, typecheck, build, size, chapter-diff check and a scripted full-story run are done; the smoke suite passes locally (8/8); the v1 per-chapter visual checklist and motion feel not judged in real time; milestone tag and deploy await your go-ahead) Run gates and manual checklist: tests/build/size/smoke; quickstart M1 items 4, 8, 10, 11 including the full v1 per-chapter checklist from `specs/001-cpu-building-story/quickstart.md`; confirm `git diff 130a23f -- src/story/chapters/ch[1-8]*.ts` is empty
 
 **Checkpoint (M1 exit)**: tests green, smoke green, manual checklist done, `npm run size` ≤ 215 kB, tag `v2-m1`, deploy.
 
@@ -140,14 +140,14 @@
 
 **Purpose**: One cycle ledger and one scene-side tracker feed the scale marker, ladder, meter, idle counter and free-play consistency. No UI here.
 
-- [ ] T053 [P] Add `WORK_CYCLES` (`compute: 1`, `'read-card': 1`) to `src/scene/locations.ts` and a test in `tests/unit/locations.test.ts` (latency numbers stay in this file only)
-- [ ] T054 [P] Create `src/scene/telemetry/ledger.ts`: `AccessJourney`, `LedgerSnapshot`, `CycleLedger` (`beginAccess`, `probe`, `serve`, `advance`, `complete`, `work`, `reset`, `subscribe`) with the six invariants from data-model.md
-- [ ] T055 Unit test `tests/unit/ledger.test.ts`: final cycles equal `locationOf(served).latencyCycles` for L1/L2/RAM/disk; `idle + working === elapsed` at every step; no double count after `complete`; probe de-duplication; idle increases only in open non-register journeys; totals equal `freeplay.applyOutcome` for the same fired sequence
-- [ ] T056 Create `src/scene/telemetry/tracker.ts`: `AccessTracker` deriving journeys from scene verbs per research D11 (`flash` miss/hit on memory levels → `probe`, `focus` ignored; `carry`/`courierTrip` → `serve` + meter tween using the verb's own duration and tween-delta `advance`; STORE direction; `deliver` → `complete`; `workerWork('compute'|'read-card')` → `work`)
-- [ ] T057 Unit test `tests/unit/access-tracker.test.ts`: replay the real verb sequences of chapters 5, 6 and 7 plus free-play LOAD/STORE flows against a recorder with real gsap timelines (`progress(1)` fast-forward and mid-way kill + `resetTelemetry`); assert ladder order, final meter, idle accounting
-- [ ] T058 Integrate the tracker into `flash`, `carry`, `courierTrip`, `deliver`, `workerWork` in `src/scene/index.ts` without changing their signatures; implement `onLedger` and `resetTelemetry` there
-- [ ] T059 Extend `src/scene/view/controls.ts` with the telemetry half (`onLedger`, `resetTelemetry`, `LedgerSnapshot`) per contracts/view-controls.md
-- [ ] T060 Update `src/main.ts`: call `scene.resetTelemetry()` on `engine.onJump` and on free-play reset; expose the ledger snapshot on `window.__cpu` under `?debug`
+- [X] T053 [P] Add `WORK_CYCLES` (`compute: 1`, `'read-card': 1`) to `src/scene/locations.ts` and a test in `tests/unit/locations.test.ts` (latency numbers stay in this file only)
+- [X] T054 [P] Create `src/scene/telemetry/ledger.ts`: `AccessJourney`, `LedgerSnapshot`, `CycleLedger` (`beginAccess`, `probe`, `serve`, `advance`, `complete`, `work`, `reset`, `subscribe`) with the six invariants from data-model.md
+- [X] T055 Unit test `tests/unit/ledger.test.ts`: final cycles equal `locationOf(served).latencyCycles` for L1/L2/RAM/disk; `idle + working === elapsed` at every step; no double count after `complete`; probe de-duplication; idle increases only in open non-register journeys; totals equal `freeplay.applyOutcome` for the same fired sequence
+- [X] T056 Create `src/scene/telemetry/tracker.ts`: `AccessTracker` deriving journeys from scene verbs per research D11 (`flash` miss/hit on memory levels → `probe`, `focus` ignored; `carry`/`courierTrip` → `serve` + meter tween using the verb's own duration and tween-delta `advance`; STORE direction; `deliver` → `complete`; `workerWork('compute'|'read-card')` → `work`)
+- [X] T057 Unit test `tests/unit/access-tracker.test.ts`: replay the real verb sequences of chapters 5, 6 and 7 plus free-play LOAD/STORE flows against a recorder with real gsap timelines (`progress(1)` fast-forward and mid-way kill + `resetTelemetry`); assert ladder order, final meter, idle accounting
+- [X] T058 Integrate the tracker into `flash`, `carry`, `courierTrip`, `deliver`, `workerWork` in `src/scene/index.ts` without changing their signatures; implement `onLedger` and `resetTelemetry` there
+- [X] T059 Extend `src/scene/view/controls.ts` with the telemetry half (`onLedger`, `resetTelemetry`, `LedgerSnapshot`) per contracts/view-controls.md
+- [X] T060 Update `src/main.ts`: call `scene.resetTelemetry()` on `engine.onJump` and on free-play reset; expose the ledger snapshot on `window.__cpu` under `?debug`
 
 **Checkpoint**: `window.__cpu` ledger values are correct for chapters 5–7 and free play (still no UI).
 
@@ -159,13 +159,13 @@
 
 **Independent test**: Toggle X-ray in each chapter: walls fade, ten role labels appear, scale shows exactly 0 / 4 / 12 / 200 / 4,000,000 and marks the active level; off restores smoothly (quickstart M2 item 1).
 
-- [ ] T061 [P] [US4] Create `src/scene/effects/Xray.ts`: fade registry for decor materials (outer walls, filler boxes, window panes, slab edges, dark-floor props), `setXray(on)` GSAP fade to ~0.12 opacity with edges/outline kept, floor-role label (CSS2D) reveal for all 10 floors; works at the `low` tier; never restarts other timelines
-- [ ] T062 [US4] Register decor materials with `Xray` in `src/scene/Building.ts` and add the 10 floor-role CSS2D labels (floor numbers + role names such as "Worker + registers", "L1 caches", "L2", "RAM archive", "lobby")
-- [ ] T063 [US4] Implement `setXray` in `src/scene/index.ts` (backed by `ViewState`) and honour `?xray` at boot in `src/main.ts`
-- [ ] T064 [P] [US4] Create `src/ui/LevelLadder.ts` with the **scale** layout: vertical rungs for registers/L1/L2/RAM/disk reading `LOCATIONS` from `src/scene/locations.ts` (no duplicated numbers), number formatting, active marker API driven by `onLedger` (`ledger.current.served`)
-- [ ] T065 [US4] Add X-ray toggle to `src/ui/ViewDock.ts`, mount the scale in `src/main.ts` while X-ray is on, and add styles to `src/styles.css` (including <900 px behaviour)
-- [ ] T066 [US4] Extend the smoke switch-sequence in `tests/smoke/story.spec.ts`: toggle X-ray on/off in several chapters and with `?lowq`; assert the scale lists the five values from the page and no console errors
-- [ ] T067 [US4] Manual check quickstart M2 item 1 in chapters 5, 6, 7, 8 and in Worker view
+- [X] T061 [P] [US4] Create `src/scene/effects/Xray.ts`: fade registry for decor materials (outer walls, filler boxes, window panes, slab edges, dark-floor props), `setXray(on)` GSAP fade to ~0.12 opacity with edges/outline kept, floor-role label (CSS2D) reveal for all 10 floors; works at the `low` tier; never restarts other timelines
+- [X] T062 [US4] Register decor materials with `Xray` in `src/scene/Building.ts` and add the 10 floor-role CSS2D labels (floor numbers + role names such as "Worker + registers", "L1 caches", "L2", "RAM archive", "lobby")
+- [X] T063 [US4] Implement `setXray` in `src/scene/index.ts` (backed by `ViewState`) and honour `?xray` at boot in `src/main.ts`
+- [X] T064 [P] [US4] Create `src/ui/LevelLadder.ts` with the **scale** layout: vertical rungs for registers/L1/L2/RAM/disk reading `LOCATIONS` from `src/scene/locations.ts` (no duplicated numbers), number formatting, active marker API driven by `onLedger` (`ledger.current.served`)
+- [X] T065 [US4] Add X-ray toggle to `src/ui/ViewDock.ts`, mount the scale in `src/main.ts` while X-ray is on, and add styles to `src/styles.css` (including <900 px behaviour)
+- [X] T066 [US4] Extend the smoke switch-sequence in `tests/smoke/story.spec.ts`: toggle X-ray on/off in several chapters and with `?lowq`; assert the scale lists the five values from the page and no console errors
+- [X] T067 [US4] Manual check quickstart M2 item 1 in chapters 5, 6, 7, 8 and in Worker view
 
 **Checkpoint**: X-ray works in every chapter and tier.
 
@@ -177,15 +177,15 @@
 
 **Independent test**: Run L1 hit, miss cascade to RAM and a disk trip: meter finals 4 / 200 / 4,000,000; ladder marks missed levels in order; idle counter rises only while waiting; locality strip shows neighbours hit (quickstart M2 items 2–9).
 
-- [ ] T068 [P] [US5] Create `src/sim/cacheLine.ts`: `CacheLineSim` (`cells` default 16, `lineSize` default 4, `access(i)` → `{hit, filled}`, `reset`)
-- [ ] T069 [US5] Unit test `tests/unit/cache-line.test.ts`: miss fills the aligned line; neighbours hit; a hit never changes residency; accessing a resident cell is always a hit; reset clears
-- [ ] T070 [US5] Extend `src/ui/LevelLadder.ts` with the **compact** layout and ledger-driven rung states (`idle`, `checked-miss`, `served`, `current`) from `LedgerSnapshot.current.probes/served`
-- [ ] T071 [P] [US5] Create `src/ui/AidsDock.ts`: cycle meter (running value + final value, thousands separators, resets per access) and idle-vs-working counter with proportional bar, collapsible, fed only by `onLedger`
-- [ ] T072 [P] [US5] Create `src/ui/LocalityStrip.ts`: 16-cell strip driven by `CacheLineSim` — click a cold cell → miss, aligned line fills with animation; click a neighbour → hit; reset button; keyboard operable
-- [ ] T073 [US5] Add the `#aids` container to `index.html`; mount `AidsDock`, compact `LevelLadder` and `LocalityStrip` in `src/main.ts` (only when 3D booted); styles in `src/styles.css` including collapse to compact form below 900 px without covering the 3D focus area
-- [ ] T074 [US5] Cross-check free play in `src/main.ts`: ensure scoreboard totals, meter finals and ledger history agree after mixed runs (adjust wiring only if they differ); extend `tests/unit/access-tracker.test.ts` with a free-play mixed-run total comparison against `applyOutcome`
-- [ ] T075 [US5] Extend `tests/smoke/story.spec.ts`: `/?lowq&debug#chapter-6`, fast-forward steps with Next, assert `window.__cpu` ledger final equals the RAM latency shown in the page and the aids dock is visible
-- [ ] T076 [US5] Run gates and manual checklist: tests/build/size/smoke; quickstart M2 items 2–9 (including tab-hidden mid-journey and chapter jump mid-journey)
+- [X] T068 [P] [US5] Create `src/sim/cacheLine.ts`: `CacheLineSim` (`cells` default 16, `lineSize` default 4, `access(i)` → `{hit, filled}`, `reset`)
+- [X] T069 [US5] Unit test `tests/unit/cache-line.test.ts`: miss fills the aligned line; neighbours hit; a hit never changes residency; accessing a resident cell is always a hit; reset clears
+- [X] T070 [US5] Extend `src/ui/LevelLadder.ts` with the **compact** layout and ledger-driven rung states (`idle`, `checked-miss`, `served`, `current`) from `LedgerSnapshot.current.probes/served`
+- [X] T071 [P] [US5] Create `src/ui/AidsDock.ts`: cycle meter (running value + final value, thousands separators, resets per access) and idle-vs-working counter with proportional bar, collapsible, fed only by `onLedger`
+- [X] T072 [P] [US5] Create `src/ui/LocalityStrip.ts`: 16-cell strip driven by `CacheLineSim` — click a cold cell → miss, aligned line fills with animation; click a neighbour → hit; reset button; keyboard operable
+- [X] T073 [US5] Add the `#aids` container to `index.html`; mount `AidsDock`, compact `LevelLadder` and `LocalityStrip` in `src/main.ts` (only when 3D booted); styles in `src/styles.css` including collapse to compact form below 900 px without covering the 3D focus area
+- [X] T074 [US5] Cross-check free play in `src/main.ts`: ensure scoreboard totals, meter finals and ledger history agree after mixed runs (adjust wiring only if they differ); extend `tests/unit/access-tracker.test.ts` with a free-play mixed-run total comparison against `applyOutcome`
+- [X] T075 [US5] Extend `tests/smoke/story.spec.ts`: `/?lowq&debug#chapter-6`, fast-forward steps with Next, assert `window.__cpu` ledger final equals the RAM latency shown in the page and the aids dock is visible
+- [X] T076 [US5] Run gates and manual checklist: tests/build/size/smoke; quickstart M2 items 2–9 (including tab-hidden mid-journey and chapter jump mid-journey)
 
 **Checkpoint (M2 exit)**: tests green, smoke green, manual checklist done, `npm run size` ≤ 215 kB, tag `v2-m2`, deploy.
 

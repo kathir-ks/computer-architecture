@@ -10,7 +10,10 @@ import { Neon } from './effects/Neon';
 import { Trails } from './effects/Trails';
 import { Quality } from './effects/Quality';
 import { Materials } from './materials';
+import { CycleLedger, type LedgerSnapshot } from './telemetry/ledger';
+import { AccessTracker, type TrackedVerbs } from './telemetry/tracker';
 import { ViewState, type CameraMode, type QualityTier, type ViewSnapshot } from './view/viewState';
+import type { ViewControls } from './view/controls';
 import { CameraRig } from './camera/CameraRig';
 import type { VantageId } from './camera/shots';
 import type { HighlightId, LocationId } from './locations';
@@ -49,7 +52,7 @@ const MOODS: Record<Mood, { bg: number; fog: number }> = {
 };
 
 /** Concrete scene: builds the world and implements the verbs contract. */
-export class Scene implements SceneVerbs {
+export class Scene implements SceneVerbs, ViewControls {
   readonly world: World;
   readonly building: Building;
   readonly worker: Worker;
@@ -61,8 +64,12 @@ export class Scene implements SceneVerbs {
   readonly trails: Trails;
   readonly quality: Quality;
   readonly rig: CameraRig;
-  /** Learner-controlled view settings (quality, camera mode; X-ray and Worker view arrive later). */
+  /** Learner-controlled view settings: quality, camera mode, Worker view and X-ray. */
   readonly view: ViewState;
+  /** Derived cycle book: observes the verbs below, so chapters never feed it directly. */
+  private readonly ledger = new CycleLedger();
+  /** The six access-bearing verbs, wrapped so playing them updates the ledger. */
+  private readonly tracked: TrackedVerbs;
 
   constructor(
     canvasHost: HTMLElement,
@@ -95,6 +102,9 @@ export class Scene implements SceneVerbs {
       },
     });
     this.world.onFps((fps) => this.quality.feedFps(fps));
+
+    // X-ray follows the view store, so every route to it (dock, URL, tests) fades the same way.
+    this.view.subscribe((v) => this.building.xray.set(v.xray));
 
     // The rig owns the camera; story flyTo calls are shot requests it honours per the learner's mode.
     this.rig = new CameraRig(
@@ -129,6 +139,15 @@ export class Scene implements SceneVerbs {
 
     // User input instantly wins over scripted camera moves (FR-016).
     this.world.onUserGrab(() => this.rig.userGrab());
+
+    this.tracked = new AccessTracker(this.ledger).wrap({
+      flash: (id, kind) => this.building.flash(id, kind),
+      workerWork: (kind) => this.worker.playWork(kind),
+      spawnPulse: (at, tint) => this.spawnPulseRaw(at, tint),
+      carry: (pulse, from, to) => this.carryRaw(pulse, from, to),
+      courierTrip: (pulse, opts) => this.courierTripRaw(pulse, opts),
+      deliver: (pulse, to) => this.deliverRaw(pulse, to),
+    });
 
     this.world.start();
   }
@@ -202,6 +221,11 @@ export class Scene implements SceneVerbs {
     this.view.setQuality(tier);
   }
 
+  /** Cross-section: decoration fades, floors are labelled. Independent of camera mode; never restarts a timeline. */
+  setXray(on: boolean): void {
+    this.view.setXray(on);
+  }
+
   setCameraMode(mode: CameraMode): void {
     this.view.setCameraMode(mode);
   }
@@ -225,6 +249,23 @@ export class Scene implements SceneVerbs {
     this.rig.setPaused(paused);
   }
 
+  // ---- telemetry (read-only for the UI) ----
+
+  /** Called whenever the cycle book changes. Returns an unsubscribe function. */
+  onLedger(cb: (s: LedgerSnapshot) => void): () => void {
+    return this.ledger.subscribe(cb);
+  }
+
+  /** Current book, for first paint and `?debug` inspection. */
+  getLedger(): LedgerSnapshot {
+    return this.ledger.snapshot();
+  }
+
+  /** Chapter jump / free-play reset: the timelines were killed, so any partial journey is dropped. */
+  resetTelemetry(): void {
+    this.ledger.reset();
+  }
+
   // ---- SceneVerbs implementation ----
 
   flyTo(target: VantageId, opts?: { duration?: number }): gsap.core.Timeline {
@@ -236,11 +277,11 @@ export class Scene implements SceneVerbs {
   }
 
   flash(id: LocationId, kind: 'hit' | 'miss' | 'focus'): gsap.core.Timeline {
-    return this.building.flash(id, kind);
+    return this.tracked.flash(id, kind);
   }
 
   workerWork(kind: WorkKind): gsap.core.Timeline {
-    return this.worker.playWork(kind);
+    return this.tracked.workerWork(kind);
   }
 
   drawer(action: 'put' | 'take', register: RegisterName): gsap.core.Timeline {
@@ -260,6 +301,22 @@ export class Scene implements SceneVerbs {
   }
 
   spawnPulse(at: LocationId, tint: PulseTint): { id: PulseId; tl: gsap.core.Timeline } {
+    return this.tracked.spawnPulse(at, tint);
+  }
+
+  carry(pulse: PulseId, from: LocationId, to: LocationId): gsap.core.Timeline {
+    return this.tracked.carry(pulse, from, to);
+  }
+
+  courierTrip(pulse: PulseId, opts?: { fastForward?: boolean }): gsap.core.Timeline {
+    return this.tracked.courierTrip(pulse, opts);
+  }
+
+  deliver(pulse: PulseId, to: LocationId | 'worker'): gsap.core.Timeline {
+    return this.tracked.deliver(pulse, to);
+  }
+
+  private spawnPulseRaw(at: LocationId, tint: PulseTint): { id: PulseId; tl: gsap.core.Timeline } {
     const tl = gsap.timeline();
     const id = this.pulses.spawn(anchorFor(at), tint);
     const mesh = this.pulses.meshOf(id)!;
@@ -268,7 +325,7 @@ export class Scene implements SceneVerbs {
     return { id, tl };
   }
 
-  carry(pulse: PulseId, from: LocationId, to: LocationId): gsap.core.Timeline {
+  private carryRaw(pulse: PulseId, from: LocationId, to: LocationId): gsap.core.Timeline {
     const tl = this.lift.carry(pulse, from, to);
     const mesh = this.pulses.meshOf(pulse);
     if (mesh) {
@@ -286,7 +343,7 @@ export class Scene implements SceneVerbs {
     return tl;
   }
 
-  courierTrip(pulse: PulseId, opts?: { fastForward?: boolean }): gsap.core.Timeline {
+  private courierTripRaw(pulse: PulseId, opts?: { fastForward?: boolean }): gsap.core.Timeline {
     const tl = this.courier.trip(pulse, opts);
     const van = this.courier.vanObject;
     tl.call(() => this.rig.track(van), undefined, 0);
@@ -294,7 +351,7 @@ export class Scene implements SceneVerbs {
     return tl;
   }
 
-  deliver(pulse: PulseId, to: LocationId | 'worker'): gsap.core.Timeline {
+  private deliverRaw(pulse: PulseId, to: LocationId | 'worker'): gsap.core.Timeline {
     const tl = gsap.timeline();
     const mesh = this.pulses.meshOf(pulse);
     if (!mesh) return tl;

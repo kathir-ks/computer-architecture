@@ -1,6 +1,6 @@
 import type { CameraMode, QualityTier, ViewSnapshot } from '../scene/view/viewState';
 
-/** The slice of ViewControls the dock needs (Worker view and X-ray join it in later phases). */
+/** The slice of ViewControls the dock needs. */
 export interface DockControls {
   getView(): ViewSnapshot;
   onView(cb: (v: ViewSnapshot) => void): () => void;
@@ -8,6 +8,7 @@ export interface DockControls {
   resumeCamera(): void;
   enterWorkerView(): void;
   exitWorkerView(): void;
+  setXray(on: boolean): void;
   setQuality(tier: QualityTier): void;
 }
 
@@ -31,6 +32,7 @@ export class ViewDock {
   private modeButtons = new Map<CameraMode, HTMLButtonElement>();
   private resumeBtn: HTMLButtonElement;
   private workerBtn: HTMLButtonElement;
+  private xrayBtn: HTMLButtonElement;
   private hint: HTMLSpanElement;
   private qualityBtn: HTMLButtonElement;
 
@@ -71,6 +73,13 @@ export class ViewDock {
       else controls.enterWorkerView();
     });
 
+    this.xrayBtn = document.createElement('button');
+    this.xrayBtn.type = 'button';
+    this.xrayBtn.className = 'dock-xray';
+    this.xrayBtn.textContent = '◫ X-ray';
+    this.xrayBtn.title = 'Cross-section: label every floor and show how far each level is';
+    this.xrayBtn.addEventListener('click', () => controls.setXray(!controls.getView().xray));
+
     this.hint = document.createElement('span');
     this.hint.className = 'dock-hint';
     this.hint.textContent = 'Drag or use the arrow keys to look around · Esc to leave';
@@ -81,7 +90,7 @@ export class ViewDock {
     this.qualityBtn.className = 'dock-quality';
     this.qualityBtn.addEventListener('click', () => controls.setQuality(nextTier(controls.getView().quality)));
 
-    dock.append(seg, this.workerBtn, this.resumeBtn, this.qualityBtn, this.hint);
+    dock.append(seg, this.workerBtn, this.xrayBtn, this.resumeBtn, this.qualityBtn, this.hint);
 
     // Esc leaves the Worker's seat from anywhere on the page.
     document.addEventListener('keydown', (e) => {
@@ -102,6 +111,8 @@ export class ViewDock {
     this.workerBtn.textContent = v.workerView ? '✕ Exit Worker view' : '👁 Worker view';
     this.workerBtn.setAttribute('aria-pressed', String(v.workerView));
     this.workerBtn.classList.toggle('on', v.workerView);
+    this.xrayBtn.setAttribute('aria-pressed', String(v.xray));
+    this.xrayBtn.classList.toggle('on', v.xray);
     this.hint.hidden = !v.workerView;
     // From the Worker's seat the room labels would just float across the desk.
     document.body.classList.toggle('worker-view', v.workerView);
