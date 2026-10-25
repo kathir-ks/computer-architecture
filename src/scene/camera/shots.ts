@@ -7,7 +7,8 @@ export type VantageId =
   | 'floor4-archive'
   | 'warehouse'
   | 'lift-shaft'
-  | 'recap-wide';
+  | 'recap-wide'
+  | 'pipeline-line';
 
 export interface Shot {
   pos: [number, number, number];
@@ -25,6 +26,8 @@ export const SHOTS: Record<VantageId, Shot> = {
   warehouse: { pos: [-16, 9, 26], target: [-26, 2.5, 8] },
   'lift-shaft': { pos: [-16, 17, 18], target: [-5.4, 15, 0] },
   'recap-wide': { pos: [26, 22, 42], target: [-8, 12, 0] },
+  // Floor 10, framing the three stations of the assembly line (Fetch by the lift, Decode, Execute at the desk).
+  'pipeline-line': { pos: [0.2, 30.6, 13.5], target: [0.2, 28.5, 0.9] },
 };
 
 export const BASE_FOV = 50;

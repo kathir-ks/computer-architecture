@@ -48,6 +48,12 @@ export const TIMING = {
   pipelineTick: 0.9,
   /** A long memory wait is shown as this many ticks, with the real figure annotated. */
   pipelineStallShown: 5,
+  /** The clerks walk in from the lift / leave again. */
+  pipelineClerkWalk: 1.4,
+  /** A card sliding from one station to the next, as a share of one tick. */
+  pipelineSlideShare: 0.62,
+  /** A fast-forwarded run plays each tick at this share of its normal length. */
+  pipelineFastShare: 0.4,
 } as const;
 
 /** Seconds for the lift to travel between two floors. */

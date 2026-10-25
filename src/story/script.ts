@@ -14,6 +14,7 @@ export const CHAPTER_TITLES = [
   'Chapter 6 · The miss cascade',
   'Chapter 7 · The trip to the warehouse',
   'Chapter 8 · The big picture',
+  'Chapter 9 · Pipelining — the assembly line',
 ] as const;
 
 export const NARRATION: string[][] = [
@@ -65,5 +66,13 @@ export const NARRATION: string[][] = [
     'Step back and look at the whole ladder: [[registers:drawers]] on the desk, [[l1d:L1]] one floor down, [[l2:L2]] below that, [[ram:the archive]] far below, and the [[disk:warehouse]] across the street. Every level: bigger, but slower. Smaller, but faster. Pick two.',
     'The full price list, side by side. Notice the scale — that last line is not a typo. Every trick in computer architecture — caches, prefetching, out-of-order execution — exists to keep the Worker from ever paying it.',
     'Now it is your turn. The launcher below lets YOU fire instructions at the building and watch where the data comes from — and what it costs. See if you can keep the Worker busy. The building is yours.',
+  ],
+  // ---- Chapter 9 · Pipelining ----
+  [
+    'One last idea before the building is yours. So far [[worker:the Worker]] has handled every card start to finish — fetch it, decode it, execute it — and only then touched the next one. Three cards means nine steps, one after another, and while the Worker decodes, nobody is fetching and nobody is executing. That is slow. There is a better way.',
+    'So the building hires two clerks. One stands by the lift and only fetches. One stands beside them and only decodes. The Worker keeps the last job: executing. Together they form an [[pipeline:assembly line]] — each person does a single step, and a card moves down the belt from one station to the next.',
+    'Now watch the line fill. While the Worker executes the first card, a clerk is decoding the second and another is already fetching the third. Three stations, three cards, everyone busy at once. Check the board: the line finishes four cards in six ticks — one at a time would take twelve. Nobody got faster. More of the building is simply working at the same moment.',
+    'But a line has a weakness. Here the second card says: use the answer from the card just ahead of me — the new value for drawer [[registers:R1]]. That answer is not ready until the Worker finishes. So the clerk has to wait. A gap — a bubble — slides down the line, and every card behind it holds its place until the answer is written back. One dependency, one stall.',
+    'Now the worst case: the card ahead needs data from memory. If it sits on the [[l1d:L1 shelf]], the wait is short. But on a miss, the Worker is stuck until the data arrives from the [[ram:archive]] — about 200 cycles — and the whole line freezes behind that one card. This is why caches matter even more in a pipeline: one slow memory trip stalls everyone.',
   ],
 ];

@@ -56,6 +56,8 @@ export function anchorFor(id: HighlightId): THREE.Vector3 {
       return WAREHOUSE_POS.clone().add(new THREE.Vector3(0, 1.6, 0));
     case 'lift':
       return new THREE.Vector3(LIFT_X, floorCenterY(1), 0);
+    case 'pipeline':
+      return new THREE.Vector3(0.1, floorBaseY(10) + 1.3, 1.35);
   }
 }
 

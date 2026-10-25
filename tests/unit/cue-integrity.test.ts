@@ -5,7 +5,7 @@ import { markerIds } from '../../src/story/markers';
 import { ALL_HIGHLIGHT_IDS, LOCATION_BY_ID } from '../../src/scene/locations';
 import type { SceneVerbs } from '../../src/scene';
 
-/** Verbs allowed by contracts/scene-verbs.md. */
+/** Verbs allowed by contracts/scene-verbs.md and scene-verbs-v2.md. Keep in sync with SceneVerbs. */
 const CONTRACT_VERBS = [
   'flyTo',
   'reveal',
@@ -20,6 +20,10 @@ const CONTRACT_VERBS = [
   'courierTrip',
   'deliver',
   'setMood',
+  // v2 (contracts/scene-verbs-v2.md)
+  'pipelineSetup',
+  'pipelineRun',
+  'pipelineTeardown',
 ] as const;
 
 /** Stub SceneVerbs: every contract verb returns an inert timeline; anything else is recorded. */
@@ -40,8 +44,8 @@ function makeStub(violations: string[]): SceneVerbs {
 }
 
 describe('cue integrity (scene–story boundary)', () => {
-  it('has exactly 8 chapters, ids 1..8, each with at least one step', () => {
-    expect(CHAPTERS).toHaveLength(8);
+  it('has exactly 9 chapters, ids 1..9, each with at least one step', () => {
+    expect(CHAPTERS).toHaveLength(9);
     CHAPTERS.forEach((ch, i) => {
       expect(ch.id).toBe(i + 1);
       expect(ch.steps.length).toBeGreaterThanOrEqual(1);

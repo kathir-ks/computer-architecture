@@ -5,6 +5,8 @@ import { anchorFor, Building, BLD_D, BLD_W, FLOORS, FLOOR_H } from './Building';
 import { Worker, type RegisterName, type WorkKind } from './Worker';
 import { Lift } from './Lift';
 import { Courier } from './Courier';
+import { PipelineLine } from './PipelineLine';
+import type { PipelineSchedule } from './pipelineSchedule';
 import { Pulses, type PulseId, type PulseTint } from './effects/Pulse';
 import { Neon } from './effects/Neon';
 import { Trails } from './effects/Trails';
@@ -42,6 +44,12 @@ export interface SceneVerbs {
   courierTrip(pulse: PulseId, opts?: { fastForward?: boolean }): gsap.core.Timeline;
   deliver(pulse: PulseId, to: LocationId | 'worker'): gsap.core.Timeline;
   setMood(mood: Mood): gsap.core.Timeline;
+  /** Reveal the assembly line on floor 10 (belt, three stations, two clerks). Idempotent. */
+  pipelineSetup(): gsap.core.Timeline;
+  /** Animate a schedule through the line; a line that is not set up appears first. */
+  pipelineRun(schedule: PipelineSchedule, opts?: { fastForward?: boolean }): gsap.core.Timeline;
+  /** Fold the line away (the clerks leave). Idempotent. */
+  pipelineTeardown(): gsap.core.Timeline;
 }
 
 const MOODS: Record<Mood, { bg: number; fog: number }> = {
@@ -58,6 +66,7 @@ export class Scene implements SceneVerbs, ViewControls {
   readonly worker: Worker;
   readonly lift: Lift;
   readonly courier: Courier;
+  readonly pipeline: PipelineLine;
   readonly pulses: Pulses;
   readonly neon: Neon;
   readonly materials: Materials;
@@ -88,6 +97,7 @@ export class Scene implements SceneVerbs, ViewControls {
     this.worker = new Worker(this.world.scene, this.materials);
     this.lift = new Lift(this.world.scene, this.pulses, this.materials);
     this.courier = new Courier(this.world.scene, this.pulses, this.materials);
+    this.pipeline = new PipelineLine(this.world.scene, this.materials);
     this.neon = new Neon(this.world);
 
     // Quality tiers drive bloom, shadows, environment light, trail length and glass detail.
@@ -192,6 +202,9 @@ export class Scene implements SceneVerbs, ViewControls {
         break;
       case 'lift':
         this.lift.setGlow(on);
+        break;
+      case 'pipeline':
+        this.pipeline.setGlow(on);
         break;
       case 'disk':
       case 'courier':
@@ -367,6 +380,18 @@ export class Scene implements SceneVerbs, ViewControls {
       this.pulses.dispose(pulse);
     });
     return tl;
+  }
+
+  pipelineSetup(): gsap.core.Timeline {
+    return this.pipeline.setup();
+  }
+
+  pipelineRun(schedule: PipelineSchedule, opts?: { fastForward?: boolean }): gsap.core.Timeline {
+    return this.pipeline.run(schedule, opts);
+  }
+
+  pipelineTeardown(): gsap.core.Timeline {
+    return this.pipeline.teardown();
   }
 
   setMood(mood: Mood): gsap.core.Timeline {
