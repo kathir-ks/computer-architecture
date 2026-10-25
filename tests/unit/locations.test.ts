@@ -43,6 +43,7 @@ describe('location table', () => {
     expect(LOCATION_BY_ID.size).toBe(LOCATIONS.length);
     for (const l of LOCATIONS) expect(ALL_HIGHLIGHT_IDS).toContain(l.id);
     expect(ALL_HIGHLIGHT_IDS).toContain('worker');
+    expect(ALL_HIGHLIGHT_IDS).toContain('pipeline'); // chapter 9 may link [[pipeline:…]]
     expect(new Set(ALL_HIGHLIGHT_IDS).size).toBe(ALL_HIGHLIGHT_IDS.length);
   });
 });

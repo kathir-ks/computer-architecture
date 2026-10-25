@@ -2,6 +2,8 @@ import './styles.css';
 import { Scene } from './scene';
 import { StoryEngine } from './story/StoryEngine';
 import { CHAPTERS } from './story/chapters';
+import { PIPELINE_PROGRAMS } from './story/chapters/ch9-pipelining';
+import { buildSchedule } from './scene/pipelineSchedule';
 import { NarrationPanel, defaultPanelRefs } from './ui/NarrationPanel';
 import { Highlighter } from './sync/Highlighter';
 import { ALL_HIGHLIGHT_IDS, type HighlightId } from './scene/locations';
@@ -48,6 +50,7 @@ function mountDevHarness(scene: Scene): void {
     'flyTo warehouse': () => scene.flyTo('warehouse'),
     'flyTo lift': () => scene.flyTo('lift-shaft'),
     'flyTo recap': () => scene.flyTo('recap-wide'),
+    'flyTo pipeline': () => scene.flyTo('pipeline-line'),
     'reveal l1i': () => scene.reveal('l1i'),
     'reveal l1d': () => scene.reveal('l1d'),
     'reveal l2': () => scene.reveal('l2'),
@@ -73,6 +76,11 @@ function mountDevHarness(scene: Scene): void {
       scene.courierTrip(lastPulse, { fastForward: true });
     },
     'deliver → worker': () => scene.deliver(lastPulse, 'worker'),
+    'pipeline setup': () => scene.pipelineSetup(),
+    'pipeline run: fill': () => scene.pipelineRun(buildSchedule(PIPELINE_PROGRAMS.fill)),
+    'pipeline run: hazard': () => scene.pipelineRun(buildSchedule(PIPELINE_PROGRAMS.hazard)),
+    'pipeline run: memory': () => scene.pipelineRun(buildSchedule(PIPELINE_PROGRAMS.memory)),
+    'pipeline teardown': () => scene.pipelineTeardown(),
     'mood tense': () => scene.setMood('tense-miss'),
     'mood working': () => scene.setMood('working'),
     'quality cycle': () => scene.setQuality(nextTier(scene.getView().quality)),
@@ -220,6 +228,7 @@ function wireStory(scene: Scene): void {
   engine.onJump(() => {
     scene.resumeCamera(); // a new chapter hands the camera back to the story
     scene.resetTelemetry(); // the old timelines were killed mid-flight; their journeys never finish
+    scene.pipelineTeardown().progress(1); // and so was any assembly line they were running
     panel.clear();
     document.getElementById('panel-controls')!.style.display = '';
     document.getElementById('freeplay')?.setAttribute('hidden', '');
@@ -242,6 +251,7 @@ function wireFreePlay(scene: Scene, panel: NarrationPanel, engine: StoryEngine):
 
   engine.onFreeplayUnlock(() => {
     scene.resetTelemetry(); // free play counts from zero, in step with its scoreboard
+    scene.pipelineTeardown(); // the clerks leave: the Execute table would hide the Worker's drawers
     document.getElementById('panel-controls')!.style.display = 'none';
     panel.showTiming(['registers', 'l1d', 'l2', 'ram', 'disk']);
     fp.show();

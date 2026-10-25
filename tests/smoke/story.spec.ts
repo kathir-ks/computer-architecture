@@ -215,3 +215,38 @@ test('live aids: the cycle meter ends chapter 6 on exactly the RAM latency, with
 
   expect(errors).toEqual([]);
 });
+
+test('chapter 9: Pipelining opens from its own address, shows nine progress dots, and plays through to free play', async ({ page }) => {
+  test.setTimeout(SLOW_TEST_MS);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+
+  await page.goto('/?lowq#chapter-9');
+  await expect(page.locator('#canvas-host canvas')).toBeVisible();
+  await expect(page.locator('.chapter-title').first()).toContainText('Pipelining');
+  await expect(page.locator('#chapter-progress > *')).toHaveCount(9);
+  await expect(page.locator('#narration .para')).toHaveCount(1);
+
+  const next = page.locator('#btn-next');
+  await next.click(); // fast-forwards the auto-played first step
+  await next.click(); // starts the second
+  await expect(page.locator('#narration .para')).toHaveCount(2);
+
+  // Play the rest. The last step of the last chapter unlocks free play.
+  const freeplay = page.locator('#freeplay');
+  await expect
+    .poll(
+      async () => {
+        await next.click();
+        return freeplay.isVisible();
+      },
+      { timeout: 90_000, intervals: [250] },
+    )
+    .toBe(true);
+  await expect(page.locator('#narration .para')).toHaveCount(5);
+
+  expect(errors).toEqual([]);
+});

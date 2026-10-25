@@ -36,7 +36,7 @@ export const WORK_CYCLES = { compute: 1, 'read-card': 1 } as const;
 export type WorkCycleKind = keyof typeof WORK_CYCLES;
 
 /** Extra highlightable scene elements that are not memory levels. */
-export const SCENE_ELEMENT_IDS = ['worker', 'pc', 'lift', 'courier'] as const;
+export const SCENE_ELEMENT_IDS = ['worker', 'pc', 'lift', 'courier', 'pipeline'] as const;
 export type SceneElementId = (typeof SCENE_ELEMENT_IDS)[number];
 
 /** Every id the highlight system / narration markers may reference. */

@@ -86,19 +86,25 @@ Invariants: a hit never changes residency; a miss makes the whole aligned line r
 
 ## PipelineSchedule (`src/scene/pipelineSchedule.ts`)
 
-Input instruction: `{ name: string; needs?: string; produces?: string; execTicks?: number }`.
+Input instruction: `{ name: string; needs?: string; produces?: string; execTicks?: number }` (`execTicks` defaults to 1; must be a whole number ≥ 1).
 
 Output:
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `ticks` | `Array<{ F: Slot; D: Slot; E: Slot }>` | `Slot = { instr: number } \| { bubble: true } \| null` |
-| `totalTicks` | number | Pipelined completion time |
-| `sequentialTicks` | number | Sum of 3 + extra exec ticks per instruction (the one-at-a-time baseline) |
-| `bubbles` | `Array<{ tick: number; stage: 'D' \| 'E'; reason: 'dependency' \| 'memory' }>` | Drives the bubble marker + narration timing |
-| `compressedMemoryTicks` | number | On-screen stand-in for a long memory wait |
+| `instructions` | `Instruction[]` | The input with `execTicks` filled in; indices in `ticks` refer to this list (the scene reads names and memory waits from here) |
+| `ticks` | `Array<{ F: Slot; D: Slot; E: Slot }>` | `Slot = { instr: number; held?: true } | { bubble: true } | null`. `held` = the instruction was already in this stage last tick (stalled, or still in a long Execute) |
+| `totalTicks` | number | Pipelined completion time (`ticks.length`) |
+| `sequentialTicks` | number | Sum of `3 + (execTicks − 1)` per instruction (the one-at-a-time baseline) |
+| `bubbles` | `Array<{ tick: number; stage: 'D' | 'E'; reason: 'dependency' | 'memory' }>` | `tick` is 1-based; today every bubble is in `E`. `memory` when the producer being waited on was a long memory access |
+| `compressedMemoryTicks` | number | The longest `execTicks` above 1 — the on-screen stand-in for a long memory wait (0 if none) |
 
-Rules: an instruction advances when the next stage is free; if `needs` names a value not yet produced (written back), insert a bubble; `execTicks > 1` holds the Execute stage and stalls F/D behind it. Invariants: ≤ 1 instruction per stage per tick; program order preserved; `totalTicks ≤ sequentialTicks`; with no hazards and `n` instructions, `totalTicks === n + 2`.
+Rules (one pure tick-by-tick simulation, `buildSchedule`):
+- An instruction advances when the next stage is free.
+- **Dependency**: operands are read while in Decode. A consumer may only leave Decode once the latest earlier instruction that `produces` its `needs` has *finished* Execute in an **earlier** tick. Until then it waits in Decode, a bubble enters Execute (if Execute is free), and Fetch holds behind it. A `needs` with no earlier producer is ignored.
+- **Memory wait**: `execTicks > 1` keeps the instruction in Execute that many ticks and holds Fetch and Decode behind it (a stall, not a bubble).
+
+Invariants (each has a test, including 300 random programs): ≤ 1 instruction per stage per tick; program order preserved into every stage; `totalTicks ≤ sequentialTicks`; with no hazards and `n ≥ 1` instructions, `totalTicks === n + 2`; a consumer's last Decode tick is after its producer's last Execute tick; the bubble list matches the bubbles in the grid exactly.
 
 ## ViewPreferences / Motion
 

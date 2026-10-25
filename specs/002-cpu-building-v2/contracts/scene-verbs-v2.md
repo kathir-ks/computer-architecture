@@ -5,7 +5,7 @@ Extends [v1 contract](../../001-cpu-building-story/contracts/scene-verbs.md). Th
 ## New verbs (M3)
 
 ```ts
-import type { PipelineSchedule } from './pipelineSchedule';
+import type { PipelineSchedule } from './pipelineSchedule'; // src/scene/pipelineSchedule.ts
 
 export interface SceneVerbs {
   // ...v1 verbs unchanged...
@@ -16,7 +16,10 @@ export interface SceneVerbs {
 
   /** Animate a schedule through the line. Cards advance station to station per tick,
    *  bubbles appear where the schedule has them, and the board shows
-   *  one-at-a-time vs pipelined tick totals. Implies pipelineSetup(). */
+   *  one-at-a-time vs pipelined tick totals. A line that is not set up yet appears at once
+   *  (the story calls pipelineSetup() first so the clerks walk in). Lasts exactly
+   *  schedule.totalTicks × TIMING.pipelineTick (× pipelineFastShare when fastForward).
+   *  At most 8 instructions (RangeError otherwise). */
   pipelineRun(schedule: PipelineSchedule, opts?: { fastForward?: boolean }): Timeline;
 
   /** Fold the line away (clerks leave, belt hides). Idempotent. */
@@ -41,11 +44,13 @@ All other signatures are identical, so chapters 1–8 compile and play without e
 
 ## Highlight ids
 
-`'pipeline'` is added to `SCENE_ELEMENT_IDS` (so narration may use `[[pipeline:the assembly line]]`). `Scene.setGlow('pipeline', on)` glows the belt and stations.
+`'pipeline'` is added to `SCENE_ELEMENT_IDS` (so narration may use `[[pipeline:the assembly line]]`). `Scene.setGlow('pipeline', on)` glows the belt, stations and their tags.
+
+The line is deliberately **not** clickable (raycasts do not honour `visible`, so a folded-away line would still catch clicks).
 
 ## Guarantees (additions)
 
-1. **Verb timelines stay pause-safe**: everything the pipeline verbs animate lives in the returned timelines.
+1. **Verb timelines stay pause-safe**: everything the pipeline verbs animate lives in the returned timelines. The line's presence is one number tweened to 1 or 0, so `pipelineSetup` / `pipelineTeardown` are idempotent. `main.ts` folds the line away on a chapter jump and when free play unlocks (the Execute table would hide the Worker's drawers).
 2. **Schedule is data**: `PipelineSchedule` is a plain object from the pure `buildSchedule()`; the scene never infers hazards, and the story never touches meshes.
 3. **No story knowledge**: pipeline verbs take a schedule, never a chapter number.
 4. **Cue integrity**: `ch9` cues may only call contract verbs; `CONTRACT_VERBS` gains `pipelineSetup`, `pipelineRun`, `pipelineTeardown`.

@@ -89,3 +89,15 @@ Manual:
 ## Performance check
 
 Open devtools Performance on `/` at each tier; target ≥ 30 fps after any automatic step-down on integrated graphics; record the tier reached. Run `npm run build` and compare gzip size to the 215 kB budget.
+
+### Recorded numbers (T093) — 2026-10-25, production build `npm run build` + `npm run preview`
+
+| Measure | Result | Target |
+|---------|--------|--------|
+| JS bundle (gzip) | 200.0 kB (`npm run size`) | ≤ 215 kB (v1 172.0 kB + 25%, SC-009) |
+| Everything `dist/` serves (gzip) | 199.5 kB (715.9 kB raw) | no more than +25% on v1 (SC-009) |
+| Page `load` event, localhost | 416–1258 ms | — |
+| Scene ready (`#loading` hidden), headless Chromium on a **software rasteriser** | 4.7 s default, 6.5 s `?lowq`, 5.2 s `#chapter-9` | < 5 s on broadband (SC-009) |
+| Frame rate, same software rasteriser | 0.3 fps default (bloom), 5 fps `?lowq` | ≥ 30 fps on integrated graphics after step-down |
+
+**Not measured here:** the ≥ 30 fps target and a true time-to-interactive. Both Chromium builds available in this environment render WebGL in software, so scene-ready is dominated by shader compilation on the CPU and fps is meaningless as a GPU figure (the default tier crawls there by design — that is what `?lowq` and the automatic step-down are for). **Still to do by hand on real hardware:** open devtools Performance on `/` on an integrated-graphics laptop, play chapters 1–9 and free play, and record the tier the watchdog settles on. The size and structure of the bundle are verified; the frame rate is not.

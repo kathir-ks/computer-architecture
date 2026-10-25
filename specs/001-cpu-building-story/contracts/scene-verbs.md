@@ -1,5 +1,7 @@
 # Contract: SceneVerbs — the scene layer's public API
 
+> **v2 extends this contract** with three pipelining verbs (`pipelineSetup`, `pipelineRun`, `pipelineTeardown`), a `'pipeline-line'` vantage and a `'pipeline'` highlight id, and changes `flyTo` to a *shot request* honoured per the learner's camera mode. v1 signatures are unchanged. See [`specs/002-cpu-building-v2/contracts/scene-verbs-v2.md`](../../002-cpu-building-v2/contracts/scene-verbs-v2.md); keep the interface, both docs and `CONTRACT_VERBS` in sync.
+
 The only interface the story layer may use (constitution II). Implemented by `src/scene/`; consumed by `src/story/chapters/*`. The cue-integrity unit test runs every chapter against a stub implementation of this interface — any call outside this contract fails CI.
 
 Every verb returns a `gsap.core.Timeline` (or a tween coerced into one) so cues can sequence and nest them. Verbs never mutate story state.

@@ -31,6 +31,9 @@ function recorder(): SceneVerbs {
     courierTrip: () => span(3),
     deliver: () => span(1),
     setMood: () => span(1),
+    pipelineSetup: () => span(1),
+    pipelineRun: () => span(1),
+    pipelineTeardown: () => span(1),
   };
 }
 
