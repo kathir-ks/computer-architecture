@@ -44,6 +44,15 @@ export interface LedgerSnapshot {
 }
 ```
 
+## As built
+
+- `Scene` `implements SceneVerbs, ViewControls`; `src/scene/view/controls.ts` holds the interface and re-exports `LedgerSnapshot` / `AccessJourney`, which are defined next to the pure ledger in `src/scene/telemetry/ledger.ts`. State lives in the pure `ViewState`.
+- X-ray follows the view store: `Scene` subscribes to `ViewState` and drives `Xray.set()`, so the dock, `?xray` and tests all fade the same way. Asking for the state it is already heading to never restarts a fade.
+- `onLedger` returns an unsubscribe function but does **not** fire immediately; read `getLedger()` (also exposed as `window.__cpu.ledger()` under `?debug`) for the current book.
+- `resetTelemetry()` is called by `main.ts` on a chapter jump, on a free-play reset and when free play unlocks (so the aids count from zero in step with the scoreboard). The free-play "Reset scoreboard" button is disabled while data is in transit.
+- Entering Worker view stores the previous mode **and** the previous hand-back; exit restores both. Picking a camera mode while seated clears the hand-back (re-engages the automation).
+- The latency scale and the live aids exist only when 3D booted (`main.ts` mounts them after `Scene`); the no-WebGL fallback never creates them.
+
 ## Behaviour rules
 
 1. **Input wins**: any pointer, wheel, touch or key input on the canvas cancels scripted camera motion and sets `handedBack`. Cancel is synchronous (within the event handler).
@@ -62,5 +71,6 @@ export interface LedgerSnapshot {
 | `?xray` | Start with X-ray on |
 | `?view=worker` | Start in Worker view |
 | `?lowq` | Start at `low` tier (existing) |
-| `?debug` | Expose `window.__cpu` (view + ledger state) for smoke tests only |
+| `?debug` | Expose `window.__cpu = { view(), ledger(), scene }` for smoke tests and manual inspection only |
 | `?dev`, `?nowebgl` | Existing behaviour |
+| `#chapter-N` | Existing deep link; now 1–9 |

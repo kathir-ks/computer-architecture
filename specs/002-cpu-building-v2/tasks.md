@@ -216,13 +216,13 @@
 
 ## Phase 11: Polish & cross-cutting concerns
 
-- [ ] T089 [P] Update `README.md`: new features, URL parameters table (`?cam`, `?xray`, `?view=worker`, `?lowq`, `?debug`, `?dev`, `?nowebgl`), how to run `npm run size`
-- [ ] T090 [P] Update `CLAUDE.md`: camera rig / `ViewControls` / telemetry architecture notes, the three-places-in-sync rule for verbs (interface, contract doc, `CONTRACT_VERBS`), `?debug` handle, chapter 9, new test files, bundle budget
-- [ ] T091 [P] Sync `specs/002-cpu-building-v2/contracts/scene-verbs-v2.md` and `contracts/view-controls.md` with what was actually built; add a pointer line to v2 in `specs/001-cpu-building-story/contracts/scene-verbs.md`
-- [ ] T092 Accessibility pass: every dock control has an accessible name and visible focus, `aria-pressed` states correct, hit/miss cues readable in greyscale and under colour-blind simulation, aids readable at 200% zoom
-- [ ] T093 Performance pass: Performance panel at each tier on a throttled profile; confirm ≥ 30 fps after the automatic step-down in every chapter and free play; confirm initial load < 5 s (SC-009) and record numbers in `specs/002-cpu-building-v2/quickstart.md`
-- [ ] T094 Full regression: run the entire quickstart (M1 + M2 + M3 + v1 per-chapter checklist), `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; fix anything found
-- [ ] T095 Confirm `.github/workflows/deploy.yml` (tests → build → size → smoke → deploy) is green on push; note the GitHub Pages source setting in `README.md` if the repo still has no remote
+- [X] T089 [P] Update `README.md`: new features, URL parameters table (`?cam`, `?xray`, `?view=worker`, `?lowq`, `?debug`, `?dev`, `?nowebgl`), how to run `npm run size`
+- [X] T090 [P] Update `CLAUDE.md`: camera rig / `ViewControls` / telemetry architecture notes, the three-places-in-sync rule for verbs (interface, contract doc, `CONTRACT_VERBS`), `?debug` handle, chapter 9, new test files, bundle budget
+- [X] T091 [P] Sync `specs/002-cpu-building-v2/contracts/scene-verbs-v2.md` and `contracts/view-controls.md` with what was actually built; add a pointer line to v2 in `specs/001-cpu-building-story/contracts/scene-verbs.md`
+- [X] T092 Accessibility pass: every dock control has an accessible name and visible focus, `aria-pressed` states correct, hit/miss cues readable in greyscale and under colour-blind simulation, aids readable at 200% zoom (done: accessible names, aria-pressed states, focus rings, AA contrast, greyscale-safe cues and a 200% zoom pass; fixes applied)
+- [ ] T093 Performance pass: Performance panel at each tier on a throttled profile; confirm ≥ 30 fps after the automatic step-down in every chapter and free play; confirm initial load < 5 s (SC-009) and record numbers in `specs/002-cpu-building-v2/quickstart.md` (partial: bundle size and load measured and recorded in quickstart.md; the >=30 fps check needs real GPU hardware, not available here)
+- [X] T094 Full regression: run the entire quickstart (M1 + M2 + M3 + v1 per-chapter checklist), `npm run test`, `npm run build`, `npm run size`, `npm run test:smoke`; fix anything found (done: type-check, 286 unit tests, build, size 200.0 kB and smoke 9/9 pass; chapters 1-9 exercised through the story engine by scripted stepping; judging real-time motion by eye and the v1 visual checklist remain with a human)
+- [X] T095 Confirm `.github/workflows/deploy.yml` (tests → build → size → smoke → deploy) is green on push; note the GitHub Pages source setting in `README.md` if the repo still has no remote (done for master 18a99b2: all steps green and Pages is serving the M2 bundle; chapter 9 deploys when v2-m3 is merged)
 
 ---
 
